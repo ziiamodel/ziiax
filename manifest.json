@@ -1,7 +1,7 @@
 {
-    "name": "VideoHub - Short Videos PWA",
-    "short_name": "VideoHub",
-    "description": "Watch trending short videos under 60 seconds, anytime, anywhere",
+    "name": "Ziiax - Exclusive Videos app",
+    "short_name": "ZIIAX",
+    "description": "Watch Exclusive short videos under 30 seconds, anytime, anywhere",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#f8fafc",
