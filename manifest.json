@@ -13,7 +13,7 @@
     "categories": ["entertainment", "video", "social"],
   "screenshots": [
     {
-        "src": "/screenshots/phone1.png",
+        "src": "/screenshots/phone3.png",
         "sizes": "390x844",
         "type": "image/png",
         "form_factor": "narrow",
