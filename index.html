@@ -1638,7 +1638,22 @@
 
 
 
+<script>
 
+    // Prevent context menu on video player
+videoPlayer.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    return false;
+});
+
+// Also prevent long-press on video thumbnails
+document.querySelectorAll('.video-thumbnail').forEach(thumbnail => {
+    thumbnail.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        return false;
+    });
+});
+</script>
 
 
 
