@@ -1641,7 +1641,44 @@
 
 
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Disable right-click
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+    }, {passive: false});
 
+    // Disable text selection
+    document.addEventListener('selectstart', function(e) {
+        e.preventDefault();
+    }, {passive: false});
+
+    // Disable mobile long-press menu
+    document.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 1) {
+            e.preventDefault();
+        }
+    }, {passive: false});
+
+    // Apply CSS to prevent text selection
+    const style = document.createElement('style');
+    style.textContent = `
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        input, textarea {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+    `;
+    document.head.appendChild(style);
+});
+</script>
 
 
     
