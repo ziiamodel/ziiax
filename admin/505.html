@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔥 Ziiax Firebase Admin Panel</title>
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Library for animations -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <!-- Library for loading animations -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.7.5/sweetalert2.min.css">
+  <style>
+    :root {
+      --primary: #6c5ce7;
+      --primary-dark: #5649c0;
+      --secondary: #2d3436;
+      --dark: #1e272e;
+      --light: #f5f6fa;
+      --success: #00b894;
+      --warning: #fdcb6e;
+      --danger: #d63031;
+      --info: #0984e3;
+      --card-bg: #ffffff;
+      --text-dark: #2d3436;
+      --text-light: #f5f6fa;
+      --sidebar-width: 280px;
+      --header-height: 70px;
+      --transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      background: #f1f5f9;
+      color: var(--text-dark);
+      font-family: 'Poppins', sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    
+    /* Password Protection */
+    #passwordProtection {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--secondary);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      flex-direction: column;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    #passwordProtection h1 {
+      color: var(--light);
+      margin-bottom: 2rem;
+      font-size: 2rem;
+      background: linear-gradient(45deg, var(--primary), var(--info));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    
+    #passwordForm {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 15px;
+      max-width: 400px;
+      width: 100%;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    #passwordForm input {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      color: white;
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+      transition: var(--transition);
+    }
+    
+    #passwordForm input:focus {
+      outline: none;
+      background: rgba(0, 0, 0, 0.5);
+      transform: translateY(-2px);
+    }
+    
+    #passwordForm button {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 8px;
+      background: var(--primary);
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    #passwordForm button:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+    }
+    
+    /* Main App Styles */
+    .app-container {
+      display: none;
+      min-height: 100vh;
+    }
+    
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-width);
+      height: 100vh;
+      background: var(--secondary);
+      color: var(--text-light);
+      padding: 1.5rem;
+      transform: translateX(-100%);
+      transition: var(--transition);
+      z-index: 100;
+      box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .sidebar.active {
+      transform: translateX(0);
+    }
+    
+    .sidebar-header {
+      position: relative;
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .logo i {
+      font-size: 1.8rem;
+      color: var(--primary);
+    }
+    
+    .logo h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(45deg, var(--primary), var(--info));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    
+    .sidebar-close {
+      position: absolute;
+      top: -0.5rem;
+      right: -0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: var(--transition);
+      display: none;
+    }
+    
+    .sidebar-close:hover {
+      background: var(--danger);
+      transform: rotate(90deg);
+    }
+    
+    .nav-menu {
+      list-style: none;
+      flex: 1;
+    }
+    
+    .nav-item {
+      margin-bottom: 0.75rem;
+    }
+    
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+    
+    .nav-link:hover, .nav-link.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      transform: translateX(5px);
+    }
+    
+    .nav-link i {
+      font-size: 1.1rem;
+    }
+    
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .logout-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border: none;
+      border-radius: 8px;
+      background: var(--danger);
+      color: white;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .logout-btn:hover {
+      background: #c0392b;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(214, 48, 49, 0.4);
+    }
+    
+    .main-content {
+      margin-left: 0;
+      transition: var(--transition);
+      padding-top: var(--header-height);
+      min-height: 100vh;
+    }
+    
+    .sidebar.active + .main-content {
+      margin-left: var(--sidebar-width);
+    }
+    
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: var(--header-height);
+      background: var(--card-bg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 1.5rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 90;
+    }
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .menu-toggle {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--secondary);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .menu-toggle:hover {
+      color: var(--primary);
+      transform: scale(1.1);
+    }
+    
+    .header-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--secondary);
+    }
+    
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+    }
+    
+    .btn-secondary {
+      background: var(--secondary);
+      color: var(--text-light);
+    }
+    
+    .btn-secondary:hover {
+      background: #3d484a;
+      transform: translateY(-2px);
+    }
+    
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background: #00a884;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 184, 148, 0.4);
+    }
+    
+    .btn-warning {
+      background: var(--warning);
+      color: var(--text-dark);
+    }
+    
+    .btn-warning:hover {
+      background: #fcb933;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(253, 203, 110, 0.4);
+    }
+    
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #c0392b;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(214, 48, 49, 0.4);
+    }
+    
+    .btn-sm {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+    }
+    
+    .btn-icon {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .container {
+      padding: 1.5rem;
+    }
+    
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      transition: var(--transition);
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-title {
+      font-size: 1.25rem;
+      margin-bottom: 1.5rem;
+      color: var(--secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .card-title i {
+      color: var(--primary);
+    }
+    
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--secondary);
+    }
+    
+    input, textarea, select {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: white;
+      color: var(--text-dark);
+      font-family: inherit;
+      transition: var(--transition);
+      font-size: 0.95rem;
+    }
+    
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+    }
+    
+    .search-bar {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+    
+    .search-bar input {
+      padding-left: 3rem;
+      background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23757575' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") no-repeat 1rem center;
+    }
+    
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .video-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      transition: var(--transition);
+    }
+    
+    .video-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .video-thumbnail {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .video-content {
+      padding: 1.25rem;
+    }
+    
+    .video-title {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 600;
+      color: var(--secondary);
+    }
+    
+    .video-description {
+      font-size: 0.9rem;
+      color: #64748b;
+      margin-bottom: 1rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .video-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-bottom: 1.25rem;
+    }
+    
+    .video-meta span {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    
+    .video-meta i {
+      font-size: 0.9rem;
+    }
+    
+    .video-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+    
+    .video-preview {
+      margin-top: 1rem;
+      width: 100%;
+      border-radius: 8px;
+      background: #000;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 3rem 0;
+      color: #94a3b8;
+      grid-column: 1 / -1;
+    }
+    
+    .empty-state i {
+      font-size: 3.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--primary);
+      opacity: 0.7;
+    }
+    
+    .empty-state h3 {
+      font-size: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: var(--secondary);
+    }
+    
+    .empty-state p {
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    /* Modal Styles */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: var(--transition);
+      backdrop-filter: blur(5px);
+    }
+    
+    .modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .modal-content {
+      background: var(--card-bg);
+      border-radius: 15px;
+      width: 95%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 2rem;
+      position: relative;
+      transform: translateY(50px);
+      transition: var(--transition);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    }
+    
+    .modal.active .modal-content {
+      transform: translateY(0);
+    }
+    
+    .close-modal {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: #64748b;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .close-modal:hover {
+      color: var(--danger);
+      transform: rotate(90deg);
+    }
+    
+    .preview-modal .modal-content {
+      max-width: 800px;
+    }
+    
+    /* Loading Spinner */
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(108, 92, 231, 0.2);
+      border-radius: 50%;
+      border-top-color: var(--primary);
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Toast Notifications */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--secondary);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: var(--transition);
+      z-index: 1100;
+      max-width: 350px;
+    }
+    
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    
+    .toast i {
+      font-size: 1.2rem;
+    }
+    
+    .toast-success {
+      background: var(--success);
+    }
+    
+    .toast-error {
+      background: var(--danger);
+    }
+    
+    .toast-warning {
+      background: var(--warning);
+      color: var(--text-dark);
+    }
+    
+    /* Responsive Styles */
+    @media (min-width: 768px) {
+      .sidebar {
+        transform: translateX(0);
+      }
+      
+      .main-content {
+        margin-left: var(--sidebar-width);
+      }
+      
+      .menu-toggle {
+        display: none;
+      }
+      
+      .sidebar-close {
+        display: none !important;
+      }
+    }
+    
+    @media (max-width: 767px) {
+      .video-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .header-title {
+        display: none;
+      }
+      
+      .sidebar-close {
+        display: block !important;
+      }
+    }
+    
+    /* Animation Classes */
+    .animate-fade-in {
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Password Protection -->
+  <div id="passwordProtection">
+    <h1 class="animate__animated animate__fadeInDown">Ziiax Admin Panel</h1>
+    <form id="passwordForm" class="animate__animated animate__fadeInUp">
+      <input type="password" id="passwordInput" placeholder="Enter Admin Password" required>
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-lock-open"></i> Unlock Panel
+      </button>
+    </form>
+  </div>
+  
+  <!-- Main App Container -->
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <i class="fas fa-fire"></i>
+          <h1>Ziiax Admin</h1>
+        </div>
+        <button class="sidebar-close" id="sidebarClose">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="#" class="nav-link active">
+            <i class="fas fa-video"></i>
+            <span>Video Manager</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="fas fa-chart-line"></i>
+            <span>Analytics</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="fas fa-users"></i>
+            <span>Users</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+          </a>
+        </li>
+      </ul>
+      
+      <div class="sidebar-footer">
+        <button class="logout-btn" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+      <header>
+        <div class="header-left">
+          <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <h2 class="header-title">Video Manager</h2>
+        </div>
+        
+        <div class="header-actions">
+          <button id="addVideoBtn" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Video
+          </button>
+        </div>
+      </header>
+      
+      <div class="container">
+        <div class="search-bar">
+          <input type="text" id="searchInput" placeholder="Search videos...">
+        </div>
+        
+        <div id="videoList" class="video-grid">
+          <!-- Videos will be loaded here -->
+        </div>
+        
+        <div id="emptyState" class="empty-state" style="display: none;">
+          <i class="fas fa-video-slash"></i>
+          <h3>No Videos Found</h3>
+          <p>Add your first video by clicking the button above</p>
+          <button id="addFirstVideoBtn" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Video
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- Add/Edit Video Modal -->
+  <div id="videoModal" class="modal">
+    <div class="modal-content animate-fade-in">
+      <button class="close-modal" id="closeModal">
+        <i class="fas fa-times"></i>
+      </button>
+      <h2 class="card-title">
+        <i class="fas fa-video"></i>
+        <span id="modalTitle">Add New Video</span>
+      </h2>
+      <form id="videoForm">
+        <input type="hidden" id="videoId">
+        
+        <div class="form-group">
+          <label for="title">Title</label>
+          <input type="text" id="title" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" rows="3" required></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="duration">Duration</label>
+          <input type="text" id="duration" placeholder="e.g. 10:30" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="videoUrl">Video URL</label>
+          <input type="url" id="videoUrl" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="thumbnail">Thumbnail URL</label>
+          <input type="url" id="thumbnail" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="views">Views</label>
+          <input type="text" id="views" placeholder="e.g. 2.1M" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="likes">Likes</label>
+          <input type="text" id="likes" placeholder="e.g. 89K" required>
+        </div>
+        
+        <div class="form-group">
+          <button type="submit" class="btn btn-primary" id="submitBtn">
+            <i class="fas fa-save"></i> Save Video
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Preview Modal -->
+  <div id="previewModal" class="modal preview-modal">
+    <div class="modal-content animate-fade-in">
+      <button class="close-modal" id="closePreviewModal">
+        <i class="fas fa-times"></i>
+      </button>
+      <h2 class="card-title">
+        <i class="fas fa-eye"></i>
+        Video Preview
+      </h2>
+      <div id="previewContent"></div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="modal" style="background: rgba(255, 255, 255, 0.8); display: none;">
+    <div style="text-align: center;">
+      <div class="spinner"></div>
+      <p style="margin-top: 1rem; font-weight: 500; color: var(--secondary);">Loading...</p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.7.5/sweetalert2.min.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { 
+      getDatabase, 
+      ref, 
+      push, 
+      onValue, 
+      remove, 
+      update,
+      query,
+      orderByChild,
+      startAt,
+      endAt
+    } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCEn0pwj7gKBB0mob55bbTBMlfNnmTcSmo",
+      authDomain: "ziiax-videos.firebaseapp.com",
+      databaseURL: "https://ziiax-videos-default-rtdb.firebaseio.com",
+      projectId: "ziiax-videos",
+      storageBucket: "ziiax-videos.firebasestorage.app",
+      messagingSenderId: "583938479266",
+      appId: "1:583938479266:web:d9bfeb83f89cc2905933fb",
+      measurementId: "G-HFDXB4DWHX"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const videoRef = ref(db, "videos");
+
+    // Password Protection
+    const passwordProtection = document.getElementById('passwordProtection');
+    const passwordForm = document.getElementById('passwordForm');
+    const passwordInput = document.getElementById('passwordInput');
+    const appContainer = document.querySelector('.app-container');
+    const correctPassword = "ziia123";
+
+    // Check if user is already authenticated
+    const isAuthenticated = sessionStorage.getItem('ziiax_authenticated') === 'true';
+    
+    if (isAuthenticated) {
+      passwordProtection.style.display = 'none';
+      appContainer.style.display = 'block';
+      document.body.style.background = '#f1f5f9';
+      initApp();
+    }
+
+    passwordForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      if (passwordInput.value === correctPassword) {
+        // Show loading animation
+        passwordProtection.innerHTML = `
+          <div style="text-align: center;">
+            <div class="spinner"></div>
+            <p style="margin-top: 1.5rem; color: white;">Authenticating...</p>
+          </div>
+        `;
+        
+        // Simulate loading (in real app, you might verify with server)
+        setTimeout(() => {
+          // Set authentication in session storage
+          sessionStorage.setItem('ziiax_authenticated', 'true');
+          
+          passwordProtection.style.display = 'none';
+          appContainer.style.display = 'block';
+          document.body.style.background = '#f1f5f9';
+          
+          // Initialize the app
+          initApp();
+        }, 1500);
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Wrong Password',
+          text: 'Please enter the correct admin password',
+          confirmButtonColor: 'var(--primary)'
+        });
+        passwordInput.focus();
+      }
+    });
+
+    function initApp() {
+      // DOM Elements
+      const videoList = document.getElementById('videoList');
+      const emptyState = document.getElementById('emptyState');
+      const searchInput = document.getElementById('searchInput');
+      const videoModal = document.getElementById('videoModal');
+      const previewModal = document.getElementById('previewModal');
+      const videoForm = document.getElementById('videoForm');
+      const modalTitle = document.getElementById('modalTitle');
+      const submitBtn = document.getElementById('submitBtn');
+      const videoIdInput = document.getElementById('videoId');
+      const previewContent = document.getElementById('previewContent');
+      const menuToggle = document.getElementById('menuToggle');
+      const sidebar = document.querySelector('.sidebar');
+      const sidebarClose = document.getElementById('sidebarClose');
+      const addVideoBtn = document.getElementById('addVideoBtn');
+      const addFirstVideoBtn = document.getElementById('addFirstVideoBtn');
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      const logoutBtn = document.getElementById('logoutBtn');
+
+      // Toggle sidebar on mobile
+      menuToggle.addEventListener('click', () => {
+        sidebar.classList.add('active');
+      });
+
+      // Close sidebar on mobile
+      sidebarClose.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+      });
+
+      // Close sidebar when clicking outside on mobile
+      document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 767) {
+          if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+            sidebar.classList.remove('active');
+          }
+        }
+      });
+
+      // Logout functionality
+      logoutBtn.addEventListener('click', () => {
+        Swal.fire({
+          title: 'Logout Confirmation',
+          text: 'Are you sure you want to logout?',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: 'var(--danger)',
+          cancelButtonColor: 'var(--secondary)',
+          confirmButtonText: 'Yes, logout!',
+          cancelButtonText: 'Cancel'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Clear authentication
+            sessionStorage.removeItem('ziiax_authenticated');
+            
+            // Show logout animation
+            appContainer.innerHTML = `
+              <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--secondary); display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 9999;">
+                <div class="spinner" style="border-color: rgba(255,255,255,0.2); border-top-color: white;"></div>
+                <p style="margin-top: 1.5rem; color: white; font-weight: 500;">Logging out...</p>
+              </div>
+            `;
+            
+            setTimeout(() => {
+              // Reset to login screen
+              location.reload();
+            }, 1500);
+          }
+        });
+      });
+
+      // Modal buttons
+      addVideoBtn.addEventListener('click', () => {
+        videoForm.reset();
+        videoIdInput.value = '';
+        modalTitle.textContent = 'Add New Video';
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Video';
+        videoModal.classList.add('active');
+      });
+
+      addFirstVideoBtn.addEventListener('click', () => {
+        videoForm.reset();
+        videoIdInput.value = '';
+        modalTitle.textContent = 'Add New Video';
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Video';
+        videoModal.classList.add('active');
+      });
+
+      document.getElementById('closeModal').addEventListener('click', () => {
+        videoModal.classList.remove('active');
+      });
+
+      document.getElementById('closePreviewModal').addEventListener('click', () => {
+        previewModal.classList.remove('active');
+      });
+
+      // Close modal when clicking outside
+      window.addEventListener('click', (e) => {
+        if (e.target === videoModal) {
+          videoModal.classList.remove('active');
+        }
+        if (e.target === previewModal) {
+          previewModal.classList.remove('active');
+        }
+      });
+
+      // Form submission
+      videoForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const videoData = {
+          title: document.getElementById('title').value,
+          description: document.getElementById('description').value,
+          duration: document.getElementById('duration').value,
+          videoUrl: document.getElementById('videoUrl').value,
+          thumbnail: document.getElementById('thumbnail').value,
+          views: document.getElementById('views').value,
+          likes: document.getElementById('likes').value,
+          createdAt: new Date().toISOString()
+        };
+        
+        showLoading();
+        
+        if (videoIdInput.value) {
+          // Update existing video
+          update(ref(db, `videos/${videoIdInput.value}`), videoData)
+            .then(() => {
+              hideLoading();
+              showToast('Video updated successfully!', 'success');
+              videoModal.classList.remove('active');
+              // Clear search when updating video
+              searchInput.value = '';
+            })
+            .catch(error => {
+              hideLoading();
+              showToast('Error updating video: ' + error.message, 'error');
+            });
+        } else {
+          // Add new video
+          push(videoRef, videoData)
+            .then(() => {
+              hideLoading();
+              showToast('Video added successfully!', 'success');
+              videoForm.reset();
+              videoModal.classList.remove('active');
+              // Clear search when adding new video
+              searchInput.value = '';
+            })
+            .catch(error => {
+              hideLoading();
+              showToast('Error adding video: ' + error.message, 'error');
+            });
+        }
+      });
+
+      // Store all videos for search functionality
+      let allVideos = {};
+
+      // Search functionality
+      searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase().trim();
+        
+        if (searchTerm === '') {
+          // Show all videos if search is empty
+          renderVideos(allVideos);
+        } else {
+          // Filter videos based on title
+          const filteredVideos = {};
+          
+          Object.entries(allVideos).forEach(([key, video]) => {
+            if (video.title && video.title.toLowerCase().includes(searchTerm)) {
+              filteredVideos[key] = video;
+            }
+          });
+          
+          renderVideos(filteredVideos);
+        }
+      });
+
+      // Render videos
+      function renderVideos(data) {
+        videoList.innerHTML = '';
+        
+        if (!data || Object.keys(data).length === 0) {
+          // Show different messages for search vs empty state
+          const searchTerm = searchInput.value.trim();
+          if (searchTerm) {
+            videoList.innerHTML = `
+              <div class="empty-state">
+                <i class="fas fa-search"></i>
+                <h3>No Videos Found</h3>
+                <p>No videos match your search for "${searchTerm}"</p>
+                <button class="btn btn-secondary" onclick="document.getElementById('searchInput').value=''; document.getElementById('searchInput').dispatchEvent(new Event('input'));">
+                  <i class="fas fa-times"></i> Clear Search
+                </button>
+              </div>
+            `;
+          } else {
+            emptyState.style.display = 'block';
+          }
+          return;
+        }
+        
+        emptyState.style.display = 'none';
+        
+        Object.entries(data).forEach(([key, video]) => {
+          const videoCard = document.createElement('div');
+          videoCard.className = 'video-card animate-fade-in';
+          videoCard.innerHTML = `
+            <img src="${video.thumbnail}" class="video-thumbnail" alt="${video.title}" loading="lazy">
+            <div class="video-content">
+              <h3 class="video-title">${video.title}</h3>
+              <p class="video-description">${video.description}</p>
+              <div class="video-meta">
+                <span><i class="fas fa-clock"></i> ${video.duration}</span>
+                <span><i class="fas fa-eye"></i> ${video.views}</span>
+                <span><i class="fas fa-thumbs-up"></i> ${video.likes}</span>
+              </div>
+              <div class="video-actions">
+                <button class="btn btn-success btn-sm btn-icon" onclick="previewVideo('${key}')" title="Preview Video">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-warning btn-sm btn-icon" onclick="editVideo('${key}')" title="Edit Video">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-danger btn-sm btn-icon" onclick="deleteVideo('${key}')" title="Delete Video">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          `;
+          videoList.appendChild(videoCard);
+        });
+      }
+
+      // Edit video
+      window.editVideo = function(key) {
+        showLoading();
+        onValue(ref(db, `videos/${key}`), (snapshot) => {
+          hideLoading();
+          const video = snapshot.val();
+          if (video) {
+            document.getElementById('title').value = video.title;
+            document.getElementById('description').value = video.description;
+            document.getElementById('duration').value = video.duration;
+            document.getElementById('videoUrl').value = video.videoUrl;
+            document.getElementById('thumbnail').value = video.thumbnail;
+            document.getElementById('views').value = video.views;
+            document.getElementById('likes').value = video.likes;
+            videoIdInput.value = key;
+            
+            modalTitle.textContent = 'Edit Video';
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Video';
+            videoModal.classList.add('active');
+          }
+        }, { onlyOnce: true });
+      };
+
+      // Delete video
+      window.deleteVideo = function(key) {
+        Swal.fire({
+          title: 'Are you sure?',
+          text: "You won't be able to revert this!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: 'var(--danger)',
+          cancelButtonColor: 'var(--secondary)',
+          confirmButtonText: 'Yes, delete it!',
+          cancelButtonText: 'Cancel'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            showLoading();
+            remove(ref(db, `videos/${key}`))
+              .then(() => {
+                hideLoading();
+                showToast('Video deleted successfully!', 'success');
+              })
+              .catch(error => {
+                hideLoading();
+                showToast('Error deleting video: ' + error.message, 'error');
+              });
+          }
+        });
+      };
+
+      // Preview video
+      window.previewVideo = function(key) {
+        showLoading();
+        onValue(ref(db, `videos/${key}`), (snapshot) => {
+          hideLoading();
+          const video = snapshot.val();
+          if (video) {
+            previewContent.innerHTML = `
+              <h3 style="margin-bottom: 0.5rem;">${video.title}</h3>
+              <p style="color: #64748b; margin-bottom: 1.5rem;">${video.description}</p>
+              <div class="video-meta" style="margin-bottom: 1.5rem;">
+                <span><i class="fas fa-clock"></i> ${video.duration}</span>
+                <span><i class="fas fa-eye"></i> ${video.views}</span>
+                <span><i class="fas fa-thumbs-up"></i> ${video.likes}</span>
+              </div>
+              <video src="${video.videoUrl}" controls class="video-preview" style="height: 400px;" preload="metadata">
+                Your browser does not support the video tag.
+              </video>
+            `;
+            previewModal.classList.add('active');
+          }
+        }, { onlyOnce: true });
+      };
+
+      // Show toast notification
+      function showToast(message, type = 'info') {
+        const icon = type === 'success' ? 'check-circle' : 
+                    type === 'error' ? 'exclamation-circle' : 'info-circle';
+        
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `
+          <i class="fas fa-${icon}"></i>
+          ${message}
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+          toast.classList.add('show');
+        }, 10);
+        
+        setTimeout(() => {
+          toast.classList.remove('show');
+          setTimeout(() => {
+            toast.remove();
+          }, 300);
+        }, 3000);
+      }
+
+      // Loading functions
+      function showLoading() {
+        loadingOverlay.style.display = 'flex';
+      }
+
+      function hideLoading() {
+        loadingOverlay.style.display = 'none';
+      }
+
+      // Initial load
+      showLoading();
+      onValue(videoRef, (snapshot) => {
+        hideLoading();
+        const data = snapshot.val();
+        allVideos = data || {}; // Store all videos for search
+        renderVideos(allVideos);
+      });
+
+      // Handle window resize
+      window.addEventListener('resize', () => {
+        if (window.innerWidth > 767) {
+          sidebar.classList.remove('active');
+        }
+      });
+    }
+  </script>
+</body>
+</html>
