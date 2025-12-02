@@ -918,514 +918,578 @@
 
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.7.5/sweetalert2.min.js"></script>
-  <script>
-    // ============================================
-    // SUPABASE CONFIGURATION
-    // ============================================
-    const SUPABASE_URL = 'https://mchmlzlwkkeojpbkdbra.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_HP5PqTe-eYRgtWZ9SfXu-A__0WOENta';
-    
-    // Initialize Supabase
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
-    // ============================================
-    // PASSWORD PROTECTION
-    // ============================================
-    const passwordProtection = document.getElementById('passwordProtection');
-    const passwordForm = document.getElementById('passwordForm');
-    const passwordInput = document.getElementById('passwordInput');
-    const appContainer = document.querySelector('.app-container');
-    const correctPassword = "ziia123"; // Change this password!
+ <script>
+  // ============================================
+  // SUPABASE CONFIGURATION
+  // ============================================
+  const SUPABASE_URL = 'https://mchmlzlwkkeojpbkdbra.supabase.co';
+  
+  // Public key (safe for browser)
+  const SUPABASE_ANON_KEY = 'sb_publishable_HP5PqTe-eYRgtWZ9SfXu-A__0WOENta';
+  
+  // Secret key for admin operations
+  const SUPABASE_SERVICE_KEY = 'sb_secret_F8m-Ke1Wisu509SrDupxIA_MXARuUn-';
+  
+  // Create two clients
+  const supabasePublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supabaseAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
+  
+  // ============================================
+  // PASSWORD PROTECTION
+  // ============================================
+  const passwordProtection = document.getElementById('passwordProtection');
+  const passwordForm = document.getElementById('passwordForm');
+  const passwordInput = document.getElementById('passwordInput');
+  const appContainer = document.querySelector('.app-container');
+  const correctPassword = "ziia123"; // Change this password!
 
-    // Check if user is already authenticated
-    const isAuthenticated = sessionStorage.getItem('ziiax_authenticated') === 'true';
+  // Check if user is already authenticated
+  const isAuthenticated = sessionStorage.getItem('ziiax_authenticated') === 'true';
+  
+  if (isAuthenticated) {
+    passwordProtection.style.display = 'none';
+    appContainer.style.display = 'block';
+    document.body.style.background = '#f1f5f9';
+    initApp();
+  }
+
+  passwordForm.addEventListener('submit', (e) => {
+    e.preventDefault();
     
-    if (isAuthenticated) {
-      passwordProtection.style.display = 'none';
-      appContainer.style.display = 'block';
-      document.body.style.background = '#f1f5f9';
-      initApp();
+    if (passwordInput.value === correctPassword) {
+      // Show loading animation
+      passwordProtection.innerHTML = `
+        <div style="text-align: center;">
+          <div class="spinner"></div>
+          <p style="margin-top: 1.5rem; color: white;">Authenticating...</p>
+        </div>
+      `;
+      
+      // Simulate loading
+      setTimeout(() => {
+        // Set authentication in session storage
+        sessionStorage.setItem('ziiax_authenticated', 'true');
+        
+        passwordProtection.style.display = 'none';
+        appContainer.style.display = 'block';
+        document.body.style.background = '#f1f5f9';
+        
+        // Initialize the app
+        initApp();
+      }, 1500);
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Wrong Password',
+        text: 'Please enter the correct admin password',
+        confirmButtonColor: 'var(--primary)'
+      });
+      passwordInput.focus();
+    }
+  });
+
+  // ============================================
+  // MAIN APPLICATION
+  // ============================================
+  function initApp() {
+    // DOM Elements
+    const videoList = document.getElementById('videoList');
+    const emptyState = document.getElementById('emptyState');
+    const searchInput = document.getElementById('searchInput');
+    const videoModal = document.getElementById('videoModal');
+    const previewModal = document.getElementById('previewModal');
+    const videoForm = document.getElementById('videoForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const submitBtn = document.getElementById('submitBtn');
+    const videoIdInput = document.getElementById('videoId');
+    const previewContent = document.getElementById('previewContent');
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarClose = document.getElementById('sidebarClose');
+    const addVideoBtn = document.getElementById('addVideoBtn');
+    const addFirstVideoBtn = document.getElementById('addFirstVideoBtn');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    // Store all videos for search functionality
+    let allVideos = [];
+
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    // Convert formatted string to integer for database
+    function parseFormattedNumber(str) {
+      if (!str) return 0;
+      
+      // If it's already a number, return it
+      if (!isNaN(str) && !str.includes('K') && !str.includes('M') && !str.includes('k') && !str.includes('m')) {
+        return parseInt(str) || 0;
+      }
+      
+      str = str.trim().toUpperCase();
+      
+      // Extract the numeric part
+      const num = parseFloat(str.replace(/[^\d.]/g, ''));
+      
+      if (isNaN(num)) return 0;
+      
+      if (str.includes('K')) {
+        return Math.round(num * 1000);
+      } else if (str.includes('M')) {
+        return Math.round(num * 1000000);
+      } else {
+        return Math.round(num);
+      }
+    }
+    
+    // Convert integer to formatted string for display
+    function formatNumber(num) {
+      if (!num && num !== 0) return '0';
+      
+      const numValue = typeof num === 'string' ? parseFloat(num) : num;
+      
+      if (isNaN(numValue)) return '0';
+      
+      if (numValue >= 1000000) {
+        return (numValue / 1000000).toFixed(1) + 'M';
+      } else if (numValue >= 1000) {
+        return (numValue / 1000).toFixed(1) + 'K';
+      } else {
+        return numValue.toString();
+      }
     }
 
-    passwordForm.addEventListener('submit', (e) => {
-      e.preventDefault();
+    // Show toast notification
+    function showToast(message, type = 'info') {
+      const icon = type === 'success' ? 'check-circle' : 
+                  type === 'error' ? 'exclamation-circle' : 'info-circle';
       
-      if (passwordInput.value === correctPassword) {
-        // Show loading animation
-        passwordProtection.innerHTML = `
-          <div style="text-align: center;">
-            <div class="spinner"></div>
-            <p style="margin-top: 1.5rem; color: white;">Authenticating...</p>
-          </div>
-        `;
-        
-        // Simulate loading
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `
+        <i class="fas fa-${icon}"></i>
+        ${message}
+      `;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.classList.add('show');
+      }, 10);
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
         setTimeout(() => {
-          // Set authentication in session storage
-          sessionStorage.setItem('ziiax_authenticated', 'true');
+          toast.remove();
+        }, 300);
+      }, 3000);
+    }
+
+    // Loading functions
+    function showLoading() {
+      loadingOverlay.style.display = 'flex';
+    }
+
+    function hideLoading() {
+      loadingOverlay.style.display = 'none';
+    }
+
+    // ============================================
+    // EVENT LISTENERS
+    // ============================================
+    // Toggle sidebar on mobile
+    menuToggle.addEventListener('click', () => {
+      sidebar.classList.add('active');
+    });
+
+    // Close sidebar on mobile
+    sidebarClose.addEventListener('click', () => {
+      sidebar.classList.remove('active');
+    });
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', (e) => {
+      if (window.innerWidth <= 767) {
+        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+          sidebar.classList.remove('active');
+        }
+      }
+    });
+
+    // Logout functionality
+    logoutBtn.addEventListener('click', () => {
+      Swal.fire({
+        title: 'Logout Confirmation',
+        text: 'Are you sure you want to logout?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: 'var(--danger)',
+        cancelButtonColor: 'var(--secondary)',
+        confirmButtonText: 'Yes, logout!',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Clear authentication
+          sessionStorage.removeItem('ziiax_authenticated');
           
-          passwordProtection.style.display = 'none';
-          appContainer.style.display = 'block';
-          document.body.style.background = '#f1f5f9';
+          // Show logout animation
+          appContainer.innerHTML = `
+            <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--secondary); display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 9999;">
+              <div class="spinner" style="border-color: rgba(255,255,255,0.2); border-top-color: white;"></div>
+              <p style="margin-top: 1.5rem; color: white; font-weight: 500;">Logging out...</p>
+            </div>
+          `;
           
-          // Initialize the app
-          initApp();
-        }, 1500);
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Wrong Password',
-          text: 'Please enter the correct admin password',
-          confirmButtonColor: 'var(--primary)'
-        });
-        passwordInput.focus();
+          setTimeout(() => {
+            // Reset to login screen
+            location.reload();
+          }, 1500);
+        }
+      });
+    });
+
+    // Modal buttons
+    addVideoBtn.addEventListener('click', () => {
+      videoForm.reset();
+      videoIdInput.value = '';
+      modalTitle.textContent = 'Add New Video';
+      submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Video';
+      videoModal.classList.add('active');
+    });
+
+    addFirstVideoBtn.addEventListener('click', () => {
+      videoForm.reset();
+      videoIdInput.value = '';
+      modalTitle.textContent = 'Add New Video';
+      submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Video';
+      videoModal.classList.add('active');
+    });
+
+    document.getElementById('closeModal').addEventListener('click', () => {
+      videoModal.classList.remove('active');
+    });
+
+    document.getElementById('closePreviewModal').addEventListener('click', () => {
+      previewModal.classList.remove('active');
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (e) => {
+      if (e.target === videoModal) {
+        videoModal.classList.remove('active');
+      }
+      if (e.target === previewModal) {
+        previewModal.classList.remove('active');
       }
     });
 
     // ============================================
-    // MAIN APPLICATION
+    // FORM SUBMISSION
     // ============================================
-    function initApp() {
-      // DOM Elements
-      const videoList = document.getElementById('videoList');
-      const emptyState = document.getElementById('emptyState');
-      const searchInput = document.getElementById('searchInput');
-      const videoModal = document.getElementById('videoModal');
-      const previewModal = document.getElementById('previewModal');
-      const videoForm = document.getElementById('videoForm');
-      const modalTitle = document.getElementById('modalTitle');
-      const submitBtn = document.getElementById('submitBtn');
-      const videoIdInput = document.getElementById('videoId');
-      const previewContent = document.getElementById('previewContent');
-      const menuToggle = document.getElementById('menuToggle');
-      const sidebar = document.querySelector('.sidebar');
-      const sidebarClose = document.getElementById('sidebarClose');
-      const addVideoBtn = document.getElementById('addVideoBtn');
-      const addFirstVideoBtn = document.getElementById('addFirstVideoBtn');
-      const loadingOverlay = document.getElementById('loadingOverlay');
-      const logoutBtn = document.getElementById('logoutBtn');
-
-      // Store all videos for search functionality
-      let allVideos = [];
-
-      // ============================================
-      // EVENT LISTENERS
-      // ============================================
-      // Toggle sidebar on mobile
-      menuToggle.addEventListener('click', () => {
-        sidebar.classList.add('active');
-      });
-
-      // Close sidebar on mobile
-      sidebarClose.addEventListener('click', () => {
-        sidebar.classList.remove('active');
-      });
-
-      // Close sidebar when clicking outside on mobile
-      document.addEventListener('click', (e) => {
-        if (window.innerWidth <= 767) {
-          if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-            sidebar.classList.remove('active');
-          }
-        }
-      });
-
-      // Logout functionality
-      logoutBtn.addEventListener('click', () => {
-        Swal.fire({
-          title: 'Logout Confirmation',
-          text: 'Are you sure you want to logout?',
-          icon: 'question',
-          showCancelButton: true,
-          confirmButtonColor: 'var(--danger)',
-          cancelButtonColor: 'var(--secondary)',
-          confirmButtonText: 'Yes, logout!',
-          cancelButtonText: 'Cancel'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            // Clear authentication
-            sessionStorage.removeItem('ziiax_authenticated');
-            
-            // Show logout animation
-            appContainer.innerHTML = `
-              <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--secondary); display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 9999;">
-                <div class="spinner" style="border-color: rgba(255,255,255,0.2); border-top-color: white;"></div>
-                <p style="margin-top: 1.5rem; color: white; font-weight: 500;">Logging out...</p>
-              </div>
-            `;
-            
-            setTimeout(() => {
-              // Reset to login screen
-              location.reload();
-            }, 1500);
-          }
-        });
-      });
-
-      // Modal buttons
-      addVideoBtn.addEventListener('click', () => {
-        videoForm.reset();
-        videoIdInput.value = '';
-        modalTitle.textContent = 'Add New Video';
-        submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Video';
-        videoModal.classList.add('active');
-      });
-
-      addFirstVideoBtn.addEventListener('click', () => {
-        videoForm.reset();
-        videoIdInput.value = '';
-        modalTitle.textContent = 'Add New Video';
-        submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Video';
-        videoModal.classList.add('active');
-      });
-
-      document.getElementById('closeModal').addEventListener('click', () => {
-        videoModal.classList.remove('active');
-      });
-
-      document.getElementById('closePreviewModal').addEventListener('click', () => {
-        previewModal.classList.remove('active');
-      });
-
-      // Close modal when clicking outside
-      window.addEventListener('click', (e) => {
-        if (e.target === videoModal) {
-          videoModal.classList.remove('active');
-        }
-        if (e.target === previewModal) {
-          previewModal.classList.remove('active');
-        }
-      });
-
-      // ============================================
-      // FORM SUBMISSION
-      // ============================================
-      videoForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const videoData = {
-          title: document.getElementById('title').value,
-          description: document.getElementById('description').value,
-          duration: document.getElementById('duration').value,
-          video_url: document.getElementById('videoUrl').value,
-          thumbnail_url: document.getElementById('thumbnail').value,
-          views: document.getElementById('views').value,
-          likes: document.getElementById('likes').value
-        };
-        
-        showLoading();
-        
-        try {
-          if (videoIdInput.value) {
-            // Update existing video
-            const { error } = await supabase
-              .from('videos')
-              .update(videoData)
-              .eq('id', videoIdInput.value);
-            
-            if (error) throw error;
-            
-            hideLoading();
-            showToast('Video updated successfully!', 'success');
-            videoModal.classList.remove('active');
-            // Clear search when updating video
-            searchInput.value = '';
-            loadVideos();
-          } else {
-            // Add new video
-            const { error } = await supabase
-              .from('videos')
-              .insert([videoData]);
-            
-            if (error) throw error;
-            
-            hideLoading();
-            showToast('Video added successfully!', 'success');
-            videoForm.reset();
-            videoModal.classList.remove('active');
-            // Clear search when adding new video
-            searchInput.value = '';
-            loadVideos();
-          }
-        } catch (error) {
-          hideLoading();
-          showToast('Error: ' + error.message, 'error');
-          console.error('Database error:', error);
-        }
-      });
-
-      // ============================================
-      // SEARCH FUNCTIONALITY
-      // ============================================
-      searchInput.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase().trim();
-        
-        if (searchTerm === '') {
-          // Show all videos if search is empty
-          renderVideos(allVideos);
-        } else {
-          // Filter videos based on title
-          const filteredVideos = allVideos.filter(video => 
-            video.title && video.title.toLowerCase().includes(searchTerm)
-          );
-          
-          renderVideos(filteredVideos);
-        }
-      });
-
-      // ============================================
-      // VIDEO FUNCTIONS
-      // ============================================
-      // Load videos from Supabase
-      async function loadVideos() {
-        showLoading();
-        try {
-          const { data: videos, error } = await supabase
+    videoForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const videoData = {
+        title: document.getElementById('title').value,
+        description: document.getElementById('description').value,
+        duration: document.getElementById('duration').value,
+        video_url: document.getElementById('videoUrl').value,
+        thumbnail_url: document.getElementById('thumbnail').value,
+        // Convert formatted strings to integers
+        views: parseFormattedNumber(document.getElementById('views').value),
+        likes: parseFormattedNumber(document.getElementById('likes').value)
+      };
+      
+      showLoading();
+      
+      try {
+        if (videoIdInput.value) {
+          // Update existing video - USE ADMIN CLIENT
+          const { error } = await supabaseAdmin
             .from('videos')
-            .select('*')
-            .order('created_at', { ascending: false });
+            .update(videoData)
+            .eq('id', videoIdInput.value);
           
           if (error) throw error;
           
-          allVideos = videos || [];
-          renderVideos(allVideos);
           hideLoading();
-        } catch (error) {
-          hideLoading();
-          showToast('Error loading videos: ' + error.message, 'error');
-          console.error('Load error:', error);
-        }
-      }
-
-      // Render videos
-      function renderVideos(videos) {
-        videoList.innerHTML = '';
-        
-        if (!videos || videos.length === 0) {
-          // Show different messages for search vs empty state
-          const searchTerm = searchInput.value.trim();
-          if (searchTerm) {
-            videoList.innerHTML = `
-              <div class="empty-state">
-                <i class="fas fa-search"></i>
-                <h3>No Videos Found</h3>
-                <p>No videos match your search for "${searchTerm}"</p>
-                <button class="btn btn-secondary" onclick="document.getElementById('searchInput').value=''; loadVideos();">
-                  <i class="fas fa-times"></i> Clear Search
-                </button>
-              </div>
-            `;
-          } else {
-            emptyState.style.display = 'block';
-          }
-          return;
-        }
-        
-        emptyState.style.display = 'none';
-        
-        videos.forEach((video, index) => {
-          const videoCard = document.createElement('div');
-          videoCard.className = 'video-card animate-fade-in';
-          videoCard.style.animationDelay = `${index * 0.05}s`;
+          showToast('Video updated successfully!', 'success');
+          videoModal.classList.remove('active');
+          searchInput.value = '';
+          loadVideos();
+        } else {
+          // Add new video - USE ADMIN CLIENT
+          const { error } = await supabaseAdmin
+            .from('videos')
+            .insert([videoData]);
           
-          videoCard.innerHTML = `
-            <img src="${video.thumbnail_url || video.thumbnail}" class="video-thumbnail" alt="${video.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x180?text=No+Thumbnail'">
-            <div class="video-content">
-              <h3 class="video-title">${video.title}</h3>
-              <p class="video-description">${video.description || 'No description available'}</p>
-              <div class="video-meta">
-                <span><i class="fas fa-clock"></i> ${video.duration || '0:00'}</span>
-                <span><i class="fas fa-eye"></i> ${video.views || '0'}</span>
-                <span><i class="fas fa-thumbs-up"></i> ${video.likes || '0'}</span>
-              </div>
-              <div class="video-actions">
-                <button class="btn btn-success btn-sm btn-icon" onclick="previewVideo(${video.id})" title="Preview Video">
-                  <i class="fas fa-eye"></i>
-                </button>
-                <button class="btn btn-warning btn-sm btn-icon" onclick="editVideo(${video.id})" title="Edit Video">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn btn-danger btn-sm btn-icon" onclick="deleteVideo(${video.id})" title="Delete Video">
-                  <i class="fas fa-trash"></i>
-                </button>
-              </div>
+          if (error) throw error;
+          
+          hideLoading();
+          showToast('Video added successfully!', 'success');
+          videoForm.reset();
+          videoModal.classList.remove('active');
+          searchInput.value = '';
+          loadVideos();
+        }
+      } catch (error) {
+        hideLoading();
+        showToast('Error: ' + error.message, 'error');
+        console.error('Database error:', error);
+      }
+    });
+
+    // ============================================
+    // SEARCH FUNCTIONALITY
+    // ============================================
+    searchInput.addEventListener('input', (e) => {
+      const searchTerm = e.target.value.toLowerCase().trim();
+      
+      if (searchTerm === '') {
+        // Show all videos if search is empty
+        renderVideos(allVideos);
+      } else {
+        // Filter videos based on title
+        const filteredVideos = allVideos.filter(video => 
+          video.title && video.title.toLowerCase().includes(searchTerm)
+        );
+        
+        renderVideos(filteredVideos);
+      }
+    });
+
+    // ============================================
+    // VIDEO FUNCTIONS
+    // ============================================
+    // Load videos from Supabase
+    async function loadVideos() {
+      showLoading();
+      try {
+        // Use PUBLIC client for reading videos
+        const { data: videos, error } = await supabasePublic
+          .from('videos')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        allVideos = videos || [];
+        renderVideos(allVideos);
+        hideLoading();
+      } catch (error) {
+        hideLoading();
+        showToast('Error loading videos: ' + error.message, 'error');
+        console.error('Load error:', error);
+      }
+    }
+
+    // Render videos
+    function renderVideos(videos) {
+      videoList.innerHTML = '';
+      
+      if (!videos || videos.length === 0) {
+        // Show different messages for search vs empty state
+        const searchTerm = searchInput.value.trim();
+        if (searchTerm) {
+          videoList.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-search"></i>
+              <h3>No Videos Found</h3>
+              <p>No videos match your search for "${searchTerm}"</p>
+              <button class="btn btn-secondary" onclick="document.getElementById('searchInput').value=''; loadVideos();">
+                <i class="fas fa-times"></i> Clear Search
+              </button>
             </div>
           `;
-          videoList.appendChild(videoCard);
-        });
+        } else {
+          emptyState.style.display = 'block';
+        }
+        return;
       }
-
-      // Edit video
-      window.editVideo = async function(videoId) {
-        showLoading();
-        try {
-          const { data: video, error } = await supabase
-            .from('videos')
-            .select('*')
-            .eq('id', videoId)
-            .single();
-          
-          hideLoading();
-          
-          if (error) throw error;
-          
-          if (video) {
-            document.getElementById('title').value = video.title;
-            document.getElementById('description').value = video.description || '';
-            document.getElementById('duration').value = video.duration || '0:00';
-            document.getElementById('videoUrl').value = video.video_url || video.videoUrl;
-            document.getElementById('thumbnail').value = video.thumbnail_url || video.thumbnail;
-            document.getElementById('views').value = video.views || '0';
-            document.getElementById('likes').value = video.likes || '0';
-            videoIdInput.value = video.id;
-            
-            modalTitle.textContent = 'Edit Video';
-            submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Video';
-            videoModal.classList.add('active');
-          }
-        } catch (error) {
-          hideLoading();
-          showToast('Error loading video: ' + error.message, 'error');
-        }
-      };
-
-      // Delete video
-      window.deleteVideo = async function(videoId) {
-        Swal.fire({
-          title: 'Are you sure?',
-          text: "You won't be able to revert this!",
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: 'var(--danger)',
-          cancelButtonColor: 'var(--secondary)',
-          confirmButtonText: 'Yes, delete it!',
-          cancelButtonText: 'Cancel'
-        }).then(async (result) => {
-          if (result.isConfirmed) {
-            showLoading();
-            try {
-              const { error } = await supabase
-                .from('videos')
-                .delete()
-                .eq('id', videoId);
-              
-              if (error) throw error;
-              
-              hideLoading();
-              showToast('Video deleted successfully!', 'success');
-              loadVideos();
-            } catch (error) {
-              hideLoading();
-              showToast('Error deleting video: ' + error.message, 'error');
-            }
-          }
-        });
-      };
-
-      // Preview video
-      window.previewVideo = async function(videoId) {
-        showLoading();
-        try {
-          const { data: video, error } = await supabase
-            .from('videos')
-            .select('*')
-            .eq('id', videoId)
-            .single();
-          
-          hideLoading();
-          
-          if (error) throw error;
-          
-          if (video) {
-            const videoUrl = video.video_url || video.videoUrl;
-            const thumbnailUrl = video.thumbnail_url || video.thumbnail;
-            
-            previewContent.innerHTML = `
-              <h3 style="margin-bottom: 0.5rem;">${video.title}</h3>
-              <p style="color: #64748b; margin-bottom: 1.5rem;">${video.description || 'No description'}</p>
-              <div class="video-meta" style="margin-bottom: 1.5rem;">
-                <span><i class="fas fa-clock"></i> ${video.duration || '0:00'}</span>
-                <span><i class="fas fa-eye"></i> ${video.views || '0'}</span>
-                <span><i class="fas fa-thumbs-up"></i> ${video.likes || '0'}</span>
-              </div>
-              <div style="margin-bottom: 1rem;">
-                <strong>Thumbnail:</strong><br>
-                <img src="${thumbnailUrl}" style="width: 200px; height: auto; border-radius: 8px; margin-top: 0.5rem;" onerror="this.style.display='none'">
-              </div>
-              <video src="${videoUrl}" controls class="video-preview" style="height: 400px;" preload="metadata">
-                Your browser does not support the video tag.
-              </video>
-            `;
-            previewModal.classList.add('active');
-          }
-        } catch (error) {
-          hideLoading();
-          showToast('Error loading video: ' + error.message, 'error');
-        }
-      };
-
-      // ============================================
-      // HELPER FUNCTIONS
-      // ============================================
-      // Show toast notification
-      function showToast(message, type = 'info') {
-        const icon = type === 'success' ? 'check-circle' : 
-                    type === 'error' ? 'exclamation-circle' : 'info-circle';
+      
+      emptyState.style.display = 'none';
+      
+      videos.forEach((video, index) => {
+        const videoCard = document.createElement('div');
+        videoCard.className = 'video-card animate-fade-in';
+        videoCard.style.animationDelay = `${index * 0.05}s`;
         
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.innerHTML = `
-          <i class="fas fa-${icon}"></i>
-          ${message}
+        // Format numbers for display
+        const formattedViews = formatNumber(video.views);
+        const formattedLikes = formatNumber(video.likes);
+        
+        videoCard.innerHTML = `
+          <img src="${video.thumbnail_url || video.thumbnail}" class="video-thumbnail" alt="${video.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x180?text=No+Thumbnail'">
+          <div class="video-content">
+            <h3 class="video-title">${video.title}</h3>
+            <p class="video-description">${video.description || 'No description available'}</p>
+            <div class="video-meta">
+              <span><i class="fas fa-clock"></i> ${video.duration || '0:00'}</span>
+              <span><i class="fas fa-eye"></i> ${formattedViews}</span>
+              <span><i class="fas fa-thumbs-up"></i> ${formattedLikes}</span>
+            </div>
+            <div class="video-actions">
+              <button class="btn btn-success btn-sm btn-icon" onclick="previewVideo(${video.id})" title="Preview Video">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="btn btn-warning btn-sm btn-icon" onclick="editVideo(${video.id})" title="Edit Video">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-danger btn-sm btn-icon" onclick="deleteVideo(${video.id})" title="Delete Video">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
         `;
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-          toast.classList.add('show');
-        }, 10);
-        
-        setTimeout(() => {
-          toast.classList.remove('show');
-          setTimeout(() => {
-            toast.remove();
-          }, 300);
-        }, 3000);
-      }
-
-      // Loading functions
-      function showLoading() {
-        loadingOverlay.style.display = 'flex';
-      }
-
-      function hideLoading() {
-        loadingOverlay.style.display = 'none';
-      }
-
-      // ============================================
-      // INITIALIZATION
-      // ============================================
-      // Load videos initially
-      loadVideos();
-
-      // Set up real-time subscription for live updates
-      const channel = supabase
-        .channel('videos-admin-channel')
-        .on('postgres_changes', 
-          { event: '*', schema: 'public', table: 'videos' }, 
-          () => {
-            console.log('Database changed, refreshing...');
-            loadVideos();
-          }
-        )
-        .subscribe();
-
-      // Handle window resize
-      window.addEventListener('resize', () => {
-        if (window.innerWidth > 767) {
-          sidebar.classList.remove('active');
-        }
+        videoList.appendChild(videoCard);
       });
     }
-  </script>
+
+    // Edit video
+    window.editVideo = async function(videoId) {
+      showLoading();
+      try {
+        // Use PUBLIC client for reading single video
+        const { data: video, error } = await supabasePublic
+          .from('videos')
+          .select('*')
+          .eq('id', videoId)
+          .single();
+        
+        hideLoading();
+        
+        if (error) throw error;
+        
+        if (video) {
+          document.getElementById('title').value = video.title;
+          document.getElementById('description').value = video.description || '';
+          document.getElementById('duration').value = video.duration || '0:00';
+          document.getElementById('videoUrl').value = video.video_url || video.videoUrl;
+          document.getElementById('thumbnail').value = video.thumbnail_url || video.thumbnail;
+          // Convert integers to formatted strings for display
+          document.getElementById('views').value = formatNumber(video.views);
+          document.getElementById('likes').value = formatNumber(video.likes);
+          videoIdInput.value = video.id;
+          
+          modalTitle.textContent = 'Edit Video';
+          submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Video';
+          videoModal.classList.add('active');
+        }
+      } catch (error) {
+        hideLoading();
+        showToast('Error loading video: ' + error.message, 'error');
+      }
+    };
+
+    // Delete video
+    window.deleteVideo = async function(videoId) {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: 'var(--danger)',
+        cancelButtonColor: 'var(--secondary)',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          showLoading();
+          try {
+            // Use ADMIN client for delete
+            const { error } = await supabaseAdmin
+              .from('videos')
+              .delete()
+              .eq('id', videoId);
+            
+            if (error) throw error;
+            
+            hideLoading();
+            showToast('Video deleted successfully!', 'success');
+            loadVideos();
+          } catch (error) {
+            hideLoading();
+            showToast('Error deleting video: ' + error.message, 'error');
+          }
+        }
+      });
+    };
+
+    // Preview video
+    window.previewVideo = async function(videoId) {
+      showLoading();
+      try {
+        // Use PUBLIC client for reading single video
+        const { data: video, error } = await supabasePublic
+          .from('videos')
+          .select('*')
+          .eq('id', videoId)
+          .single();
+        
+        hideLoading();
+        
+        if (error) throw error;
+        
+        if (video) {
+          const videoUrl = video.video_url || video.videoUrl;
+          const thumbnailUrl = video.thumbnail_url || video.thumbnail;
+          
+          previewContent.innerHTML = `
+            <h3 style="margin-bottom: 0.5rem;">${video.title}</h3>
+            <p style="color: #64748b; margin-bottom: 1.5rem;">${video.description || 'No description'}</p>
+            <div class="video-meta" style="margin-bottom: 1.5rem;">
+              <span><i class="fas fa-clock"></i> ${video.duration || '0:00'}</span>
+              <span><i class="fas fa-eye"></i> ${formatNumber(video.views)}</span>
+              <span><i class="fas fa-thumbs-up"></i> ${formatNumber(video.likes)}</span>
+            </div>
+            <div style="margin-bottom: 1rem;">
+              <strong>Thumbnail:</strong><br>
+              <img src="${thumbnailUrl}" style="width: 200px; height: auto; border-radius: 8px; margin-top: 0.5rem;" onerror="this.style.display='none'">
+            </div>
+            <video src="${videoUrl}" controls class="video-preview" style="height: 400px;" preload="metadata">
+              Your browser does not support the video tag.
+            </video>
+          `;
+          previewModal.classList.add('active');
+        }
+      } catch (error) {
+        hideLoading();
+        showToast('Error loading video: ' + error.message, 'error');
+      }
+    };
+
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    // Load videos initially
+    loadVideos();
+
+    // Set up real-time subscription for live updates
+    const channel = supabasePublic
+      .channel('videos-admin-channel')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'videos' }, 
+        () => {
+          console.log('Database changed, refreshing...');
+          loadVideos();
+        }
+      )
+      .subscribe();
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 767) {
+        sidebar.classList.remove('active');
+      }
+    });
+  }
+</script>
+
+
+  
 </body>
 </html>
