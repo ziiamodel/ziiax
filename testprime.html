@@ -1203,568 +1203,554 @@
     </div>
 
        <script>
-        // Global variables
-        let deferredPrompt;
-        let videosData = [];
-        let currentVideoIndex = 0;
-        let videoSubscription = null;
-
-        // Supabase Configuration - USE THESE EXACT VALUES
-const SUPABASE_URL = 'https://mchmlzlwkkeojpbkdbra.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_HP5PqTe-eYRgtWZ9SfXu-A__0WOENta';
-
-// Initialize Supabase
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-window.supabaseClient = supabase;
-
-        // DOM Elements
-        const installButton = document.getElementById('installButton');
-        const videoGrid = document.getElementById('video-grid');
-        const videoModal = document.getElementById('videoModal');
-        const videoPlayer = document.getElementById('videoPlayer');
-        const playPauseBtn = document.getElementById('playPauseBtn');
-        const muteBtn = document.getElementById('muteBtn');
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
-        const closeBtn = document.getElementById('closeBtn');
-        const replayBtn = document.getElementById('replayBtn');
-        const progressBar = document.getElementById('progressBar');
-        const progress = document.getElementById('progress');
-        const timeDisplay = document.getElementById('timeDisplay');
-        const retryButton = document.getElementById('retry-button');
-
-        // State management elements
-        const loadingState = document.getElementById('loading-state');
-        const errorState = document.getElementById('error-state');
-        const emptyState = document.getElementById('empty-state');
-        const offlineState = document.getElementById('offline-state');
-        const errorMessage = document.getElementById('error-message');
-        const retryConnectionBtn = document.getElementById('retry-connection');
-
-        // Network Detection
-        function checkOnlineStatus() {
-            return navigator.onLine;
-        }
-
-        function handleOffline() {
-            console.log('App went offline');
-            if (loadingState && !loadingState.classList.contains('hidden')) {
-                showOffline();
+    // ============================================
+    // SUPABASE CONFIGURATION
+    // ============================================
+    const SUPABASE_URL = 'https://mchmlzlwkkeojpbkdbra.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_HP5PqTe-eYRgtWZ9SfXu-A__0WOENta';
+    
+    // Initialize Supabase
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.supabaseClient = supabase;
+    
+    // ============================================
+    // GLOBAL VARIABLES
+    // ============================================
+    let deferredPrompt;  // ONLY DECLARE ONCE!
+    let videosData = [];
+    let currentVideoIndex = 0;
+    let videoSubscription = null;
+    
+    // ============================================
+    // DOM ELEMENTS
+    // ============================================
+    const installButton = document.getElementById('installButton');
+    const videoGrid = document.getElementById('video-grid');
+    const videoModal = document.getElementById('videoModal');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const closeBtn = document.getElementById('closeBtn');
+    const replayBtn = document.getElementById('replayBtn');
+    const progressBar = document.getElementById('progressBar');
+    const progress = document.getElementById('progress');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const retryButton = document.getElementById('retry-button');
+    
+    // State management elements
+    const loadingState = document.getElementById('loading-state');
+    const errorState = document.getElementById('error-state');
+    const emptyState = document.getElementById('empty-state');
+    const offlineState = document.getElementById('offline-state');
+    const errorMessage = document.getElementById('error-message');
+    const retryConnectionBtn = document.getElementById('retry-connection');
+    
+    // ============================================
+    // TEST CONNECTION FUNCTION
+    // ============================================
+    async function testSupabaseConnection() {
+        console.log('🔗 Testing Supabase connection...');
+        console.log('URL:', SUPABASE_URL);
+        
+        try {
+            const { data, error, count } = await supabase
+                .from('videos')
+                .select('*', { count: 'exact', head: true });
+            
+            if (error) {
+                console.error('❌ Supabase connection failed:', error);
+                return false;
             }
+            
+            console.log(`✅ Connected! Found ${count} videos in database`);
+            return true;
+        } catch (err) {
+            console.error('❌ Connection error:', err);
+            return false;
         }
-
-        function handleOnline() {
-            console.log('App back online');
-            if (offlineState && !offlineState.classList.contains('hidden')) {
-                initializeSupabase();
-            }
+    }
+    
+    // ============================================
+    // SUPABASE DATABASE FUNCTIONS
+    // ============================================
+    function initializeSupabase() {
+        console.log('📥 Initializing Supabase...');
+        
+        // Check internet connection first
+        if (!navigator.onLine) {
+            showOffline();
+            return;
         }
-
-        // Supabase Database Functions
-        function initializeSupabase() {
-            // Check internet connection first
-            if (!checkOnlineStatus()) {
-                showOffline();
+        
+        loadVideosFromSupabase();
+    }
+    
+    async function loadVideosFromSupabase() {
+        console.log('📋 Loading videos...');
+        showLoading();
+        
+        try {
+            const { data: videos, error } = await supabase
+                .from('videos')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (error) {
+                console.error('Supabase error:', error);
+                if (!navigator.onLine || error.message.includes('network') || error.message.includes('fetch')) {
+                    showOffline();
+                } else {
+                    showError('Failed to load videos: ' + error.message);
+                }
                 return;
             }
             
-            loadVideosFromSupabase();
-        }
-
-        async function loadVideosFromSupabase() {
-            showLoading();
+            console.log('📊 Videos loaded:', videos);
             
-            try {
-                const { data: videos, error } = await supabase
-                    .from('videos')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-                
-                if (error) {
-                    console.error('Supabase error:', error);
-                    if (!checkOnlineStatus() || error.message.includes('network') || error.message.includes('fetch')) {
-                        showOffline();
-                    } else {
-                        showError('Failed to load videos: ' + error.message);
-                    }
-                    return;
-                }
-                
-                if (videos && videos.length > 0) {
-                    videosData = videos;
-                    console.log('Loaded videos from Supabase:', videosData);
-                    displayVideos();
-                } else {
-                    showEmpty();
-                }
-            } catch (error) {
-                console.error('Error loading videos:', error);
-                if (!checkOnlineStatus() || error.message.includes('network')) {
-                    showOffline();
-                } else {
-                    showError('Failed to connect: ' + error.message);
-                }
-            }
-        }
-
-        function subscribeToVideos() {
-            try {
-                const subscription = supabase
-                    .channel('videos-channel')
-                    .on('postgres_changes', 
-                        { event: '*', schema: 'public', table: 'videos' }, 
-                        () => {
-                            console.log('Database changed, refreshing...');
-                            loadVideosFromSupabase();
-                        }
-                    )
-                    .subscribe((status) => {
-                        console.log('Subscription status:', status);
-                    });
-                
-                videoSubscription = subscription;
-                return subscription;
-            } catch (error) {
-                console.error('Subscription error:', error);
-                return null;
-            }
-        }
-
-        function showLoading() {
-            loadingState.classList.remove('hidden');
-            errorState.classList.add('hidden');
-            emptyState.classList.add('hidden');
-            offlineState.classList.add('hidden');
-            videoGrid.classList.add('hidden');
-        }
-
-        function showError(message) {
-            loadingState.classList.add('hidden');
-            errorState.classList.remove('hidden');
-            emptyState.classList.add('hidden');
-            offlineState.classList.add('hidden');
-            videoGrid.classList.add('hidden');
-            errorMessage.textContent = message;
-        }
-
-        function showEmpty() {
-            loadingState.classList.add('hidden');
-            errorState.classList.add('hidden');
-            emptyState.classList.remove('hidden');
-            offlineState.classList.add('hidden');
-            videoGrid.classList.add('hidden');
-        }
-
-        function showOffline() {
-            loadingState.classList.add('hidden');
-            errorState.classList.add('hidden');
-            emptyState.classList.add('hidden');
-            offlineState.classList.remove('hidden');
-            videoGrid.classList.add('hidden');
-        }
-
-        function showVideos() {
-            loadingState.classList.add('hidden');
-            errorState.classList.add('hidden');
-            emptyState.classList.add('hidden');
-            offlineState.classList.add('hidden');
-            videoGrid.classList.remove('hidden');
-        }
-
-        function displayVideos() {
-            videoGrid.innerHTML = '';
-            
-            videosData.forEach((video, index) => {
-                const videoCard = createVideoCard(video, index);
-                videoGrid.appendChild(videoCard);
-            });
-            
-            showVideos();
-        }
-
-        function createVideoCard(video, index) {
-            const card = document.createElement('div');
-            card.className = 'video-card animate-fade-in';
-            card.style.animationDelay = `${index * 0.1}s`;
-            
-            // Format duration (handle both string and number formats)
-            const formatDuration = (duration) => {
-                if (!duration) return '0:00';
-                
-                // If duration is already a string in MM:SS format, return it
-                if (typeof duration === 'string' && duration.includes(':')) {
-                    return duration;
-                }
-                
-                // If duration is a number (seconds), convert to MM:SS
-                const durationNum = parseFloat(duration);
-                if (!isNaN(durationNum)) {
-                    const mins = Math.floor(durationNum / 60);
-                    const secs = Math.floor(durationNum % 60);
-                    return `${mins}:${secs.toString().padStart(2, '0')}`;
-                }
-                
-                return '0:00';
-            };
-
-            // Format views/likes count (handle both string and number formats)
-            const formatCount = (count) => {
-                if (!count) return '0';
-                
-                // If count is already formatted as string (e.g., "89K", "2.1M"), return it
-                if (typeof count === 'string' && (count.includes('K') || count.includes('M'))) {
-                    return count;
-                }
-                
-                // If count is a number, format it
-                const countNum = parseFloat(count);
-                if (!isNaN(countNum)) {
-                    if (countNum >= 1000000) return (countNum / 1000000).toFixed(1) + 'M';
-                    if (countNum >= 1000) return (countNum / 1000).toFixed(1) + 'K';
-                    return countNum.toString();
-                }
-                
-                return count.toString();
-            };
-
-            // Use thumbnail_url (Supabase) or thumbnail (Firebase fallback)
-            const thumbnailUrl = video.thumbnail_url || video.thumbnail;
-            const videoUrl = video.video_url || video.videoUrl;
-
-            card.innerHTML = `
-                <div class="video-thumbnail">
-                    ${thumbnailUrl ? 
-                        `<img src="${thumbnailUrl}" alt="${video.title || 'Video thumbnail'}" onerror="this.style.display='none';">` : 
-                        `<div class="no-thumbnail">
-                            <i class="fas fa-video" style="font-size: 2rem; color: var(--gray-400);"></i>
-                            <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--gray-500);">No Image</div>
-                        </div>`
-                    }
-                    <div class="play-button">
-                        <i class="fas fa-play"></i>
-                    </div>
-                    <div class="duration-badge">${formatDuration(video.duration)}</div>
-                    <div class="shorts-badge">HOT</div>
-                </div>
-                <div class="video-card-content">
-                    <h3 class="video-card-title">${video.title || 'Untitled Video'}</h3>
-                    <p class="video-card-description">${video.description || 'No description available'}</p>
-                    <div class="video-card-meta">
-                        <span>
-                            <i class="fas fa-heart"></i>
-                            ${formatCount(video.likes)}
-                        </span>
-                        <span>
-                            <i class="fas fa-eye"></i>
-                            ${formatCount(video.views)}
-                        </span>
-                    </div>
-                </div>
-            `;
-
-            card.addEventListener('click', () => openVideoModal(index));
-            return card;
-        }
-
-        function openVideoModal(index) {
-            currentVideoIndex = index;
-            const video = videosData[index];
-            
-            // Use video_url (Supabase) or videoUrl (Firebase fallback)
-            const videoUrl = video.video_url || video.videoUrl;
-            
-            if (video && videoUrl) {
-                videoPlayer.src = videoUrl;
-                videoModal.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
-                
-                // Reset player state
-                videoPlayer.currentTime = 0;
-                replayBtn.classList.remove('show');
-                updateProgress();
-                updateTimeDisplay();
-                
-                // Auto-play if supported
-                videoPlayer.play().catch(e => console.log('Autoplay prevented:', e));
+            if (videos && videos.length > 0) {
+                videosData = videos;
+                displayVideos();
             } else {
-                console.error('Video URL not found for index:', index);
-                console.error('Available video data:', video);
-                alert('Video not available. Please try another video.');
+                showEmpty();
+            }
+        } catch (error) {
+            console.error('Error loading videos:', error);
+            if (!navigator.onLine || error.message.includes('network')) {
+                showOffline();
+            } else {
+                showError('Failed to connect: ' + error.message);
             }
         }
-
-        function closeVideoModal() {
-            videoModal.classList.add('hidden');
-            document.body.style.overflow = '';
-            videoPlayer.pause();
-            videoPlayer.src = '';
-            replayBtn.classList.remove('show');
+    }
+    
+    function subscribeToVideos() {
+        try {
+            const subscription = supabase
+                .channel('videos-channel')
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'videos' }, 
+                    () => {
+                        console.log('🔄 Database changed, refreshing...');
+                        loadVideosFromSupabase();
+                    }
+                )
+                .subscribe((status) => {
+                    console.log('📡 Subscription status:', status);
+                });
+            
+            videoSubscription = subscription;
+            return subscription;
+        } catch (error) {
+            console.error('Subscription error:', error);
+            return null;
         }
-
-        function replayVideo() {
+    }
+    
+    // ============================================
+    // UI STATE FUNCTIONS
+    // ============================================
+    function showLoading() {
+        loadingState.classList.remove('hidden');
+        errorState.classList.add('hidden');
+        emptyState.classList.add('hidden');
+        offlineState.classList.add('hidden');
+        videoGrid.classList.add('hidden');
+    }
+    
+    function showError(message) {
+        loadingState.classList.add('hidden');
+        errorState.classList.remove('hidden');
+        emptyState.classList.add('hidden');
+        offlineState.classList.add('hidden');
+        videoGrid.classList.add('hidden');
+        errorMessage.textContent = message;
+    }
+    
+    function showEmpty() {
+        loadingState.classList.add('hidden');
+        errorState.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        offlineState.classList.add('hidden');
+        videoGrid.classList.add('hidden');
+    }
+    
+    function showOffline() {
+        loadingState.classList.add('hidden');
+        errorState.classList.add('hidden');
+        emptyState.classList.add('hidden');
+        offlineState.classList.remove('hidden');
+        videoGrid.classList.add('hidden');
+    }
+    
+    function showVideos() {
+        loadingState.classList.add('hidden');
+        errorState.classList.add('hidden');
+        emptyState.classList.add('hidden');
+        offlineState.classList.add('hidden');
+        videoGrid.classList.remove('hidden');
+    }
+    
+    // ============================================
+    // VIDEO DISPLAY FUNCTIONS
+    // ============================================
+    function displayVideos() {
+        console.log('🎬 Displaying', videosData.length, 'videos');
+        videoGrid.innerHTML = '';
+        
+        videosData.forEach((video, index) => {
+            const videoCard = createVideoCard(video, index);
+            videoGrid.appendChild(videoCard);
+        });
+        
+        showVideos();
+    }
+    
+    function createVideoCard(video, index) {
+        const card = document.createElement('div');
+        card.className = 'video-card animate-fade-in';
+        card.style.animationDelay = `${index * 0.1}s`;
+        
+        const formatDuration = (duration) => {
+            if (!duration) return '0:00';
+            if (typeof duration === 'string' && duration.includes(':')) return duration;
+            
+            const durationNum = parseFloat(duration);
+            if (!isNaN(durationNum)) {
+                const mins = Math.floor(durationNum / 60);
+                const secs = Math.floor(durationNum % 60);
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
+            return '0:00';
+        };
+    
+        const formatCount = (count) => {
+            if (!count) return '0';
+            if (typeof count === 'string' && (count.includes('K') || count.includes('M'))) return count;
+            
+            const countNum = parseFloat(count);
+            if (!isNaN(countNum)) {
+                if (countNum >= 1000000) return (countNum / 1000000).toFixed(1) + 'M';
+                if (countNum >= 1000) return (countNum / 1000).toFixed(1) + 'K';
+                return countNum.toString();
+            }
+            return count.toString();
+        };
+    
+        const thumbnailUrl = video.thumbnail_url || video.thumbnail;
+        const videoUrl = video.video_url || video.videoUrl;
+    
+        card.innerHTML = `
+            <div class="video-thumbnail">
+                ${thumbnailUrl ? 
+                    `<img src="${thumbnailUrl}" alt="${video.title || 'Video'}" onerror="this.style.display='none';">` : 
+                    `<div class="no-thumbnail">
+                        <i class="fas fa-video" style="font-size: 2rem; color: var(--gray-400);"></i>
+                        <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--gray-500);">No Image</div>
+                    </div>`
+                }
+                <div class="play-button">
+                    <i class="fas fa-play"></i>
+                </div>
+                <div class="duration-badge">${formatDuration(video.duration)}</div>
+                <div class="shorts-badge">HOT</div>
+            </div>
+            <div class="video-card-content">
+                <h3 class="video-card-title">${video.title || 'Untitled Video'}</h3>
+                <p class="video-card-description">${video.description || 'No description available'}</p>
+                <div class="video-card-meta">
+                    <span>
+                        <i class="fas fa-heart"></i>
+                        ${formatCount(video.likes)}
+                    </span>
+                    <span>
+                        <i class="fas fa-eye"></i>
+                        ${formatCount(video.views)}
+                    </span>
+                </div>
+            </div>
+        `;
+    
+        card.addEventListener('click', () => openVideoModal(index));
+        return card;
+    }
+    
+    // ============================================
+    // VIDEO PLAYER FUNCTIONS
+    // ============================================
+    function openVideoModal(index) {
+        currentVideoIndex = index;
+        const video = videosData[index];
+        
+        const videoUrl = video.video_url || video.videoUrl;
+        
+        if (video && videoUrl) {
+            console.log('▶️ Playing video:', video.title);
+            videoPlayer.src = videoUrl;
+            videoModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
             videoPlayer.currentTime = 0;
             replayBtn.classList.remove('show');
-            // Clear inline styles to reset replay button
-            replayBtn.style.opacity = '';
-            replayBtn.style.pointerEvents = '';
-            replayBtn.style.visibility = '';
-            replayBtn.style.display = '';
-            replayBtn.style.zIndex = '';
-            videoPlayer.play();
-        }
-
-        function togglePlayPause() {
-            if (videoPlayer.paused) {
-                videoPlayer.play();
-                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
-            } else {
-                videoPlayer.pause();
-                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-            }
-        }
-
-        function toggleMute() {
-            videoPlayer.muted = !videoPlayer.muted;
-            muteBtn.innerHTML = videoPlayer.muted 
-                ? '<i class="fas fa-volume-mute"></i>' 
-                : '<i class="fas fa-volume-up"></i>';
-        }
-
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                videoModal.requestFullscreen().catch(err => {
-                    console.log('Error attempting to enable fullscreen:', err);
-                });
-                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
-            } else {
-                document.exitFullscreen();
-                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
-            }
-        }
-
-        function updateProgress() {
-            if (videoPlayer.duration) {
-                const progressPercent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
-                progress.style.width = progressPercent + '%';
-            }
-        }
-
-        function updateTimeDisplay() {
-            const current = formatTime(videoPlayer.currentTime);
-            const duration = formatTime(videoPlayer.duration || 0);
-            timeDisplay.textContent = `${current} / ${duration}`;
-        }
-
-        function formatTime(seconds) {
-            if (!seconds || isNaN(seconds)) return '0:00';
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins}:${secs.toString().padStart(2, '0')}`;
-        }
-
-        function seekVideo(e) {
-            const rect = progressBar.getBoundingClientRect();
-            const percent = (e.clientX - rect.left) / rect.width;
-            videoPlayer.currentTime = percent * videoPlayer.duration;
-        }
-
-        // Event Listeners
-        document.addEventListener('DOMContentLoaded', () => {
-            // Debug: Check if replay button exists
-            console.log('Replay button element:', replayBtn);
-            console.log('Replay button found:', !!replayBtn);
-            
-            // For demonstration: You can temporarily test offline screen by uncommenting below:
-            // showOffline(); return;
-            
-            // Initialize Supabase when DOM is ready
-            setTimeout(initializeSupabase, 100);
-            
-            // Subscribe to real-time updates
-            const subscription = subscribeToVideos();
-            if (subscription) {
-                console.log('Subscribed to video updates');
-            }
-        });
-
-        // Retry buttons
-        retryButton.addEventListener('click', () => {
-            initializeSupabase();
-        });
-
-        retryConnectionBtn.addEventListener('click', () => {
-            // Add loading animation to button
-            const icon = retryConnectionBtn.querySelector('i');
-            icon.style.animationPlayState = 'running';
-            
-            setTimeout(() => {
-                icon.style.animationPlayState = 'paused';
-                initializeSupabase();
-            }, 1000);
-        });
-
-        // Network status event listeners
-        window.addEventListener('online', handleOnline);
-        window.addEventListener('offline', handleOffline);
-
-        // Video player event listeners
-        videoPlayer.addEventListener('loadedmetadata', updateTimeDisplay);
-        videoPlayer.addEventListener('timeupdate', () => {
             updateProgress();
             updateTimeDisplay();
-        });
-
-        videoPlayer.addEventListener('play', () => {
+            
+            videoPlayer.play().catch(e => console.log('Autoplay prevented:', e));
+        } else {
+            console.error('Video URL not found:', video);
+            alert('Video not available. Please try another video.');
+        }
+    }
+    
+    function closeVideoModal() {
+        videoModal.classList.add('hidden');
+        document.body.style.overflow = '';
+        videoPlayer.pause();
+        videoPlayer.src = '';
+        replayBtn.classList.remove('show');
+    }
+    
+    function replayVideo() {
+        videoPlayer.currentTime = 0;
+        replayBtn.classList.remove('show');
+        videoPlayer.play();
+    }
+    
+    function togglePlayPause() {
+        if (videoPlayer.paused) {
+            videoPlayer.play();
             playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
-            replayBtn.classList.remove('show');
-            // Clear inline styles to reset replay button
-            replayBtn.style.opacity = '';
-            replayBtn.style.pointerEvents = '';
-            replayBtn.style.visibility = '';
-            replayBtn.style.display = '';
-            replayBtn.style.zIndex = '';
-        });
-
-        videoPlayer.addEventListener('pause', () => {
+        } else {
+            videoPlayer.pause();
             playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-        });
-
-        videoPlayer.addEventListener('ended', () => {
-            console.log('Video ended - showing replay button');
-            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-            replayBtn.classList.add('show');
-            // Force inline style to override any CSS conflicts - use setProperty for higher priority
-            replayBtn.style.setProperty('opacity', '1', 'important');
-            replayBtn.style.setProperty('pointer-events', 'auto', 'important');
-            replayBtn.style.setProperty('visibility', 'visible', 'important');
-            replayBtn.style.setProperty('display', 'flex', 'important');
-            replayBtn.style.setProperty('z-index', '99999', 'important');
-            console.log('Replay button classes:', replayBtn.classList.toString());
-            console.log('Replay button computed style opacity:', window.getComputedStyle(replayBtn).opacity);
-            console.log('Replay button computed style display:', window.getComputedStyle(replayBtn).display);
-            console.log('Replay button computed style visibility:', window.getComputedStyle(replayBtn).visibility);
-            console.log('Replay button computed style z-index:', window.getComputedStyle(replayBtn).zIndex);
-            // Auto-play next video if available after 3 seconds if no replay
-            if (currentVideoIndex < videosData.length - 1) {
-                setTimeout(() => {
-                    if (replayBtn.classList.contains('show')) {
-                        openVideoModal(currentVideoIndex + 1);
-                    }
-                }, 3000);
-            }
-        });
-
-        // Control event listeners
-        playPauseBtn.addEventListener('click', togglePlayPause);
-        muteBtn.addEventListener('click', toggleMute);
-        fullscreenBtn.addEventListener('click', toggleFullscreen);
-        closeBtn.addEventListener('click', closeVideoModal);
-        replayBtn.addEventListener('click', replayVideo);
-        progressBar.addEventListener('click', seekVideo);
-
-        // Keyboard controls
-        document.addEventListener('keydown', (e) => {
-            if (!videoModal.classList.contains('hidden')) {
-                switch(e.code) {
-                    case 'Space':
-                        e.preventDefault();
-                        togglePlayPause();
-                        break;
-                    case 'Escape':
-                        closeVideoModal();
-                        break;
-                    case 'KeyM':
-                        toggleMute();
-                        break;
-                    case 'KeyF':
-                        toggleFullscreen();
-                        break;
-                    case 'ArrowLeft':
-                        videoPlayer.currentTime -= 10;
-                        break;
-                    case 'ArrowRight':
-                        videoPlayer.currentTime += 10;
-                        break;
+        }
+    }
+    
+    function toggleMute() {
+        videoPlayer.muted = !videoPlayer.muted;
+        muteBtn.innerHTML = videoPlayer.muted 
+            ? '<i class="fas fa-volume-mute"></i>' 
+            : '<i class="fas fa-volume-up"></i>';
+    }
+    
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            videoModal.requestFullscreen().catch(err => {
+                console.log('Error enabling fullscreen:', err);
+            });
+            fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+        } else {
+            document.exitFullscreen();
+            fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+        }
+    }
+    
+    function updateProgress() {
+        if (videoPlayer.duration) {
+            const progressPercent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
+            progress.style.width = progressPercent + '%';
+        }
+    }
+    
+    function updateTimeDisplay() {
+        const current = formatTime(videoPlayer.currentTime);
+        const duration = formatTime(videoPlayer.duration || 0);
+        timeDisplay.textContent = `${current} / ${duration}`;
+    }
+    
+    function formatTime(seconds) {
+        if (!seconds || isNaN(seconds)) return '0:00';
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    function seekVideo(e) {
+        const rect = progressBar.getBoundingClientRect();
+        const percent = (e.clientX - rect.left) / rect.width;
+        videoPlayer.currentTime = percent * videoPlayer.duration;
+    }
+    
+    // ============================================
+    // EVENT LISTENERS
+    // ============================================
+    document.addEventListener('DOMContentLoaded', async () => {
+        console.log('🚀 App starting...');
+        
+        // Test connection first
+        const isConnected = await testSupabaseConnection();
+        
+        if (isConnected) {
+            // Load videos
+            initializeSupabase();
+            
+            // Subscribe to updates
+            subscribeToVideos();
+        } else {
+            showError('Cannot connect to database. Please check your internet connection.');
+        }
+    });
+    
+    retryButton.addEventListener('click', () => {
+        initializeSupabase();
+    });
+    
+    retryConnectionBtn.addEventListener('click', () => {
+        const icon = retryConnectionBtn.querySelector('i');
+        icon.style.animationPlayState = 'running';
+        
+        setTimeout(() => {
+            icon.style.animationPlayState = 'paused';
+            initializeSupabase();
+        }, 1000);
+    });
+    
+    window.addEventListener('online', () => {
+        console.log('🌐 Back online');
+        if (videosData.length === 0) {
+            initializeSupabase();
+        }
+    });
+    
+    window.addEventListener('offline', () => {
+        console.log('📴 Offline');
+        handleOffline();
+    });
+    
+    function handleOffline() {
+        if (loadingState && !loadingState.classList.contains('hidden')) {
+            showOffline();
+        }
+    }
+    
+    // Video player events
+    videoPlayer.addEventListener('loadedmetadata', updateTimeDisplay);
+    videoPlayer.addEventListener('timeupdate', () => {
+        updateProgress();
+        updateTimeDisplay();
+    });
+    
+    videoPlayer.addEventListener('play', () => {
+        playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        replayBtn.classList.remove('show');
+    });
+    
+    videoPlayer.addEventListener('pause', () => {
+        playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+    });
+    
+    videoPlayer.addEventListener('ended', () => {
+        console.log('⏹️ Video ended');
+        playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        replayBtn.classList.add('show');
+        
+        // Auto-play next video after 3 seconds if no replay
+        if (currentVideoIndex < videosData.length - 1) {
+            setTimeout(() => {
+                if (replayBtn.classList.contains('show')) {
+                    openVideoModal(currentVideoIndex + 1);
                 }
+            }, 3000);
+        }
+    });
+    
+    playPauseBtn.addEventListener('click', togglePlayPause);
+    muteBtn.addEventListener('click', toggleMute);
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+    closeBtn.addEventListener('click', closeVideoModal);
+    replayBtn.addEventListener('click', replayVideo);
+    progressBar.addEventListener('click', seekVideo);
+    
+    // Keyboard controls
+    document.addEventListener('keydown', (e) => {
+        if (!videoModal.classList.contains('hidden')) {
+            switch(e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    togglePlayPause();
+                    break;
+                case 'Escape':
+                    closeVideoModal();
+                    break;
+                case 'KeyM':
+                    toggleMute();
+                    break;
+                case 'KeyF':
+                    toggleFullscreen();
+                    break;
+                case 'ArrowLeft':
+                    videoPlayer.currentTime -= 10;
+                    break;
+                case 'ArrowRight':
+                    videoPlayer.currentTime += 10;
+                    break;
             }
-        });
-
-        // Fullscreen change event
-        document.addEventListener('fullscreenchange', () => {
-            fullscreenBtn.innerHTML = document.fullscreenElement 
-                ? '<i class="fas fa-compress"></i>' 
-                : '<i class="fas fa-expand"></i>';
-        });
-
-        // PWA Installation
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            installButton.classList.remove('hidden');
-        });
-
+        }
+    });
+    
+    document.addEventListener('fullscreenchange', () => {
+        fullscreenBtn.innerHTML = document.fullscreenElement 
+            ? '<i class="fas fa-compress"></i>' 
+            : '<i class="fas fa-expand"></i>';
+    });
+    
+    // PWA Installation
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (installButton) installButton.classList.remove('hidden');
+    });
+    
+    if (installButton) {
         installButton.addEventListener('click', async () => {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
-                console.log(`User response to the install prompt: ${outcome}`);
+                console.log(`PWA installation: ${outcome}`);
                 deferredPrompt = null;
                 installButton.classList.add('hidden');
             }
         });
-
-        window.addEventListener('appinstalled', () => {
-            console.log('PWA was installed');
-            installButton.classList.add('hidden');
-        });
-
-        // Service Worker Registration
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/ssw.js').then((registration) => {
-                    console.log('SW registered: ', registration);
-                }).catch((registrationError) => {
-                    console.log('SW registration failed: ', registrationError);
-                });
+    }
+    
+    window.addEventListener('appinstalled', () => {
+        console.log('📱 PWA installed');
+        if (installButton) installButton.classList.add('hidden');
+    });
+    
+    // Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/ssw.js').then((registration) => {
+                console.log('⚙️ Service Worker registered:', registration);
+            }).catch((registrationError) => {
+                console.log('⚙️ Service Worker failed:', registrationError);
             });
+        });
+    }
+    
+    // Cleanup
+    window.addEventListener('beforeunload', () => {
+        if (videoSubscription) {
+            supabase.removeChannel(videoSubscription);
         }
-
-        // Connection status monitoring
-        window.addEventListener('online', () => {
-            if (videosData.length === 0) {
-                initializeSupabase();
-            }
-        });
-
-        window.addEventListener('offline', () => {
-            console.log('App is offline');
-        });
-
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-            if (videoSubscription) {
-                supabase.removeChannel(videoSubscription);
-            }
-        });
-
-        // Prevent context menu on video player
-        videoPlayer.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            return false;
-        });
-
-        // Also prevent long-press on video thumbnails
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.video-thumbnail').forEach(thumbnail => {
-                thumbnail.addEventListener('contextmenu', (e) => {
-                    e.preventDefault();
-                    return false;
-                });
+    });
+    
+    // Prevent right-click on videos
+    videoPlayer.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        return false;
+    });
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.video-thumbnail').forEach(thumbnail => {
+            thumbnail.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                return false;
             });
         });
-    </script>
-
-
-
+    });
+</script>
 
 
 
