@@ -411,18 +411,21 @@
 
         /* ===== Video Feed ===== */
         .video-feed-container {
-            max-width: 500px;
+            max-width: 100%;
             margin: 0 auto;
-            height: calc(100vh - 200px);
+            height: calc(100vh - 140px);
             position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .video-feed {
+            width: 100%;
             height: 100%;
             overflow-y: auto;
             scroll-snap-type: y mandatory;
             scroll-behavior: smooth;
-            border-radius: var(--radius-xl);
             position: relative;
         }
 
@@ -432,27 +435,30 @@
 
         /* ===== Video Card ===== */
         .video-card {
-            height: calc(100vh - 200px);
-            min-height: 600px;
+            width: 100%;
+            height: 100%;
             scroll-snap-align: start;
             position: relative;
-            border-radius: var(--radius-xl);
             overflow: hidden;
-            margin-bottom: 1rem;
             background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .video-wrapper {
             position: relative;
             width: 100%;
             height: 100%;
+            max-width: 800px;
             overflow: hidden;
         }
 
         .video-player {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
+            background: #000;
         }
 
         /* ===== Video Overlay ===== */
@@ -464,132 +470,24 @@
             height: 100%;
             background: linear-gradient(
                 to bottom,
-                rgba(0, 0, 0, 0.6) 0%,
+                rgba(0, 0, 0, 0.3) 0%,
                 transparent 20%,
                 transparent 80%,
-                rgba(0, 0, 0, 0.4) 100%
+                rgba(0, 0, 0, 0.3) 100%
             );
             padding: 1.5rem;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             z-index: 2;
-        }
-
-        /* ===== Creator Info ===== */
-        .creator-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            animation: slideInLeft 0.5s ease-out;
-        }
-
-        @keyframes slideInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .creator-avatar {
-            position: relative;
-            width: 60px;
-            height: 60px;
-            border-radius: var(--radius-full);
-            overflow: hidden;
-            border: 2px solid var(--primary);
-            flex-shrink: 0;
-        }
-
-        .creator-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .creator-badge {
-            position: absolute;
-            bottom: -5px;
-            right: -5px;
-            background: var(--gradient-primary);
-            color: white;
-            width: 24px;
-            height: 24px;
-            border-radius: var(--radius-full);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            border: 2px solid var(--bg-primary);
-        }
-
-        .creator-details {
-            flex: 1;
-        }
-
-        .creator-name {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .verified-badge {
-            color: var(--primary);
-            font-size: 0.875rem;
-        }
-
-        .creator-tag {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .creator-stats {
-            display: flex;
-            gap: 1rem;
-            font-size: 0.875rem;
-            color: var(--text-tertiary);
-        }
-
-        .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-
-        .follow-button {
-            background: var(--gradient-primary);
-            color: white;
-            border: none;
-            padding: 0.5rem 1.5rem;
-            border-radius: var(--radius-full);
-            font-weight: 500;
-            cursor: pointer;
-            transition: all var(--transition-normal);
-            white-space: nowrap;
-        }
-
-        .follow-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
-        }
-
-        .follow-button.following {
-            background: var(--bg-tertiary);
-            color: var(--text-secondary);
+            pointer-events: none;
         }
 
         /* ===== Video Content ===== */
         .video-content {
             max-width: 85%;
             animation: slideInUp 0.5s ease-out 0.2s both;
+            pointer-events: auto;
         }
 
         @keyframes slideInUp {
@@ -608,6 +506,11 @@
             line-height: 1.6;
             margin-bottom: 1rem;
             font-weight: 500;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .hashtags {
@@ -625,11 +528,15 @@
             color: var(--text-secondary);
             cursor: pointer;
             transition: all var(--transition-fast);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: auto;
         }
 
         .hashtag:hover {
             background: rgba(99, 102, 241, 0.2);
             color: var(--primary);
+            border-color: var(--primary);
         }
 
         .video-stats {
@@ -637,6 +544,12 @@
             gap: 1.5rem;
             color: var(--text-secondary);
             font-size: 0.875rem;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: fit-content;
         }
 
         .stat {
@@ -649,12 +562,13 @@
         .right-actions {
             position: absolute;
             right: 1.5rem;
-            bottom: 6rem;
+            bottom: 5rem;
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
             z-index: 3;
             animation: slideInRight 0.5s ease-out 0.4s both;
+            pointer-events: auto;
         }
 
         @keyframes slideInRight {
@@ -718,126 +632,10 @@
             font-size: 0.75rem;
             font-weight: 600;
             color: var(--text-secondary);
-        }
-
-        /* ===== Player Controls ===== */
-        .player-controls {
-            position: absolute;
-            bottom: 1.5rem;
-            left: 1.5rem;
-            right: 1.5rem;
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: var(--blur-lg);
-            border-radius: var(--radius-xl);
-            padding: 1rem 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            z-index: 3;
-            animation: slideInUp 0.5s ease-out 0.6s both;
-        }
-
-        .control-button {
-            width: 40px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.5);
+            padding: 0.25rem 0.5rem;
             border-radius: var(--radius-full);
-            color: var(--text-primary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all var(--transition-fast);
-        }
-
-        .control-button:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.1);
-        }
-
-        .progress-container {
-            flex: 1;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: var(--gradient-primary);
-            border-radius: 2px;
-            width: 0%;
-            position: relative;
-            transition: width 0.1s linear;
-        }
-
-        .progress-bar::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 12px;
-            height: 12px;
-            background: white;
-            border-radius: 50%;
-            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
-        }
-
-        .time-display {
-            font-size: 0.875rem;
-            font-weight: 500;
-            min-width: 100px;
-            text-align: center;
-            font-variant-numeric: tabular-nums;
-        }
-
-        /* ===== Volume Control ===== */
-        .volume-control {
-            position: relative;
-        }
-
-        .volume-slider {
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%) rotate(-90deg);
-            transform-origin: bottom left;
-            width: 100px;
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: var(--blur-lg);
-            padding: 1rem;
-            border-radius: var(--radius-lg);
-            opacity: 0;
-            visibility: hidden;
-            transition: all var(--transition-normal);
-        }
-
-        .volume-control:hover .volume-slider {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) rotate(-90deg) translateY(-10px);
-        }
-
-        .volume-slider input {
-            width: 100%;
-            height: 4px;
-            -webkit-appearance: none;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            outline: none;
-        }
-
-        .volume-slider input::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            background: var(--primary);
-            border-radius: 50%;
-            cursor: pointer;
+            backdrop-filter: blur(10px);
         }
 
         /* ===== Replay Overlay ===== */
@@ -862,6 +660,7 @@
             visibility: hidden;
             transition: all var(--transition-bounce);
             z-index: 4;
+            pointer-events: auto;
         }
 
         .replay-overlay.show {
@@ -1101,19 +900,20 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(15, 23, 42, 0.9);
+            background: rgba(15, 23, 42, 0.95);
             backdrop-filter: var(--blur-xl);
             border-top: 1px solid var(--border-light);
-            padding: 0.75rem 0;
+            padding: 0.5rem 0;
             z-index: 1000;
         }
 
         .nav-content {
-            max-width: 500px;
+            max-width: 100%;
             margin: 0 auto;
             display: flex;
             justify-content: space-around;
             align-items: center;
+            padding: 0 1rem;
         }
 
         .nav-item {
@@ -1125,20 +925,23 @@
             border: none;
             color: var(--text-tertiary);
             cursor: pointer;
-            padding: 0.5rem;
+            padding: 0.5rem 1rem;
             border-radius: var(--radius-lg);
             transition: all var(--transition-normal);
             position: relative;
+            flex: 1;
+            max-width: 80px;
         }
 
         .nav-item.active {
             color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
         }
 
-        .nav-item.active::before {
+        .nav-item.active::after {
             content: '';
             position: absolute;
-            bottom: -0.75rem;
+            bottom: -0.5rem;
             width: 4px;
             height: 4px;
             background: var(--primary);
@@ -1148,6 +951,7 @@
         .nav-item:hover {
             color: var(--text-primary);
             background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
         }
 
         .nav-icon {
@@ -1155,33 +959,9 @@
         }
 
         .nav-text {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 500;
-        }
-
-        .upload-button {
-            position: absolute;
-            bottom: 3rem;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 60px;
-            background: var(--gradient-primary);
-            border: none;
-            border-radius: var(--radius-full);
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            transition: all var(--transition-bounce);
-            z-index: 1001;
-        }
-
-        .upload-button:hover {
-            transform: translateX(-50%) scale(1.1);
-            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+            white-space: nowrap;
         }
 
         /* ===== Responsive Design ===== */
@@ -1192,6 +972,10 @@
             
             .search-input {
                 width: 250px;
+            }
+            
+            .video-wrapper {
+                max-width: 90%;
             }
         }
 
@@ -1205,37 +989,53 @@
             }
             
             .video-feed-container {
-                max-width: 100%;
-                padding: 0 0.5rem;
+                height: calc(100vh - 130px);
+                padding: 0;
             }
             
-            .video-card {
-                min-height: 500px;
+            .video-wrapper {
+                max-width: 100%;
+            }
+            
+            .video-overlay {
+                padding: 1rem;
             }
             
             .right-actions {
                 right: 1rem;
-                bottom: 5rem;
+                bottom: 4rem;
             }
             
-            .player-controls {
-                left: 1rem;
-                right: 1rem;
-                padding: 0.75rem 1rem;
+            .video-content {
+                max-width: 90%;
             }
             
-            .creator-info {
-                gap: 0.75rem;
-            }
-            
-            .creator-avatar {
-                width: 50px;
-                height: 50px;
+            .video-caption {
+                font-size: 1rem;
+                padding: 0.5rem 0.75rem;
             }
             
             .action-icon {
                 width: 48px;
                 height: 48px;
+                font-size: 1rem;
+            }
+            
+            .nav-content {
+                padding: 0 0.5rem;
+            }
+            
+            .nav-item {
+                padding: 0.5rem;
+                max-width: 70px;
+            }
+            
+            .nav-icon {
+                font-size: 1.1rem;
+            }
+            
+            .nav-text {
+                font-size: 0.65rem;
             }
         }
 
@@ -1244,22 +1044,70 @@
                 max-width: 95%;
             }
             
-            .creator-name {
+            .video-caption {
                 font-size: 0.875rem;
             }
             
-            .video-caption {
-                font-size: 1rem;
+            .hashtag {
+                font-size: 0.75rem;
+                padding: 0.25rem 0.5rem;
+            }
+            
+            .video-stats {
+                font-size: 0.75rem;
+                padding: 0.5rem 0.75rem;
             }
             
             .action-icon {
                 width: 44px;
                 height: 44px;
+            }
+            
+            .right-actions {
+                gap: 1rem;
+                bottom: 3.5rem;
+            }
+            
+            .action-count {
+                font-size: 0.65rem;
+            }
+            
+            .nav-text {
+                font-size: 0.6rem;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .video-wrapper {
+                max-width: 900px;
+            }
+        }
+
+        @media (min-width: 1400px) {
+            .video-wrapper {
+                max-width: 1000px;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 600px) {
+            .video-feed-container {
+                height: calc(100vh - 120px);
+            }
+            
+            .bottom-nav {
+                padding: 0.25rem 0;
+            }
+            
+            .nav-item {
+                padding: 0.25rem 0.5rem;
+            }
+            
+            .nav-icon {
                 font-size: 1rem;
             }
             
-            .nav-content {
-                padding: 0 0.5rem;
+            .nav-text {
+                font-size: 0.6rem;
             }
         }
 
@@ -1475,28 +1323,23 @@
                     <i class="fas fa-home nav-icon"></i>
                     <span class="nav-text">Home</span>
                 </button>
-                <button class="nav-item" data-page="explore">
+                <button class="nav-item" data-page="trending">
+                    <i class="fas fa-fire nav-icon"></i>
+                    <span class="nav-text">Trending</span>
+                </button>
+                <button class="nav-item" data-page="discover">
                     <i class="fas fa-compass nav-icon"></i>
-                    <span class="nav-text">Explore</span>
+                    <span class="nav-text">Discover</span>
                 </button>
-                <button class="nav-item" data-page="creators">
-                    <i class="fas fa-users nav-icon"></i>
-                    <span class="nav-text">Creators</span>
-                </button>
-                <button class="nav-item" data-page="library">
-                    <i class="fas fa-bookmark nav-icon"></i>
-                    <span class="nav-text">Saved</span>
+                <button class="nav-item" data-page="notifications">
+                    <i class="fas fa-bell nav-icon"></i>
+                    <span class="nav-text">Alerts</span>
                 </button>
                 <button class="nav-item" data-page="profile">
                     <i class="fas fa-user nav-icon"></i>
-                    <span class="nav-text">Profile</span>
+                    <span class="nav-text">Me</span>
                 </button>
             </div>
-            
-            <!-- Upload Button -->
-            <button id="uploadButton" class="upload-button">
-                <i class="fas fa-plus"></i>
-            </button>
         </nav>
 
         <!-- Notification Toast -->
@@ -1625,7 +1468,6 @@
             errorMessage: document.getElementById('errorMessage'),
             retryButton: document.getElementById('retryButton'),
             installButton: document.getElementById('installButton'),
-            uploadButton: document.getElementById('uploadButton'),
             uploadFirstButton: document.getElementById('uploadFirstButton'),
             aiRecommendations: document.getElementById('aiRecommendations'),
             recommendationList: document.getElementById('recommendationList'),
@@ -1764,7 +1606,6 @@
 
         function createVideoCard(video, index) {
             const isLiked = state.userData.likedVideos.has(video.id);
-            const isFollowing = state.userData.following.has(video.creator_tag);
             
             const card = document.createElement('div');
             card.className = 'video-card';
@@ -1772,42 +1613,11 @@
             
             card.innerHTML = `
                 <div class="video-wrapper">
-                    <video class="video-player" preload="auto" playsinline>
+                    <video class="video-player" preload="auto" playsinline muted>
                         <source src="${video.video_url}" type="video/mp4">
                     </video>
                     
                     <div class="video-overlay">
-                        <!-- Creator Info -->
-                        <div class="creator-info">
-                            <div class="creator-avatar">
-                                <img src="${video.creator_avatar}" alt="${video.creator_name}">
-                                <div class="creator-badge">
-                                    <i class="fas fa-crown"></i>
-                                </div>
-                            </div>
-                            <div class="creator-details">
-                                <div class="creator-name">
-                                    ${video.creator_name}
-                                    ${video.is_verified ? '<i class="fas fa-check-circle verified-badge"></i>' : ''}
-                                </div>
-                                <div class="creator-tag">${video.creator_tag}</div>
-                                <div class="creator-stats">
-                                    <div class="stat-item">
-                                        <i class="fas fa-video"></i>
-                                        ${formatNumber(video.views || 0)} views
-                                    </div>
-                                    <div class="stat-item">
-                                        <i class="fas fa-user-plus"></i>
-                                        ${formatNumber(Math.floor((video.views || 0) / 100))} followers
-                                    </div>
-                                </div>
-                            </div>
-                            <button class="follow-button ${isFollowing ? 'following' : ''}" 
-                                    data-creator="${video.creator_tag}">
-                                ${isFollowing ? 'Following' : 'Follow'}
-                            </button>
-                        </div>
-                        
                         <!-- Video Content -->
                         <div class="video-content">
                             <div class="video-caption">${video.title}</div>
@@ -1815,6 +1625,10 @@
                                 <div class="stat">
                                     <i class="fas fa-calendar"></i>
                                     ${formatTimeAgo(video.created_at)}
+                                </div>
+                                <div class="stat">
+                                    <i class="fas fa-eye"></i>
+                                    ${formatNumber(video.views || 0)} views
                                 </div>
                                 <div class="stat">
                                     <i class="fas fa-clock"></i>
@@ -1856,28 +1670,6 @@
                             </div>
                         </div>
                         
-                        <!-- Player Controls -->
-                        <div class="player-controls">
-                            <button class="control-button play-pause-btn" data-video-id="${video.id}">
-                                <i class="fas fa-pause"></i>
-                            </button>
-                            
-                            <div class="progress-container" data-video-id="${video.id}">
-                                <div class="progress-bar"></div>
-                            </div>
-                            
-                            <div class="time-display">0:00 / ${formatDuration(video.duration || 0)}</div>
-                            
-                            <div class="volume-control">
-                                <button class="control-button volume-btn" data-video-id="${video.id}">
-                                    <i class="fas fa-volume-up"></i>
-                                </button>
-                                <div class="volume-slider">
-                                    <input type="range" min="0" max="100" value="100" class="volume-range">
-                                </div>
-                            </div>
-                        </div>
-                        
                         <!-- Replay Overlay -->
                         <div class="replay-overlay" data-video-id="${video.id}">
                             <i class="fas fa-redo replay-icon"></i>
@@ -1889,37 +1681,15 @@
             
             // Setup video events
             const videoElement = card.querySelector('video');
-            const playPauseBtn = card.querySelector('.play-pause-btn');
-            const progressContainer = card.querySelector('.progress-container');
-            const progressBar = card.querySelector('.progress-bar');
-            const timeDisplay = card.querySelector('.time-display');
-            const volumeRange = card.querySelector('.volume-range');
-            const volumeBtn = card.querySelector('.volume-btn');
             const replayOverlay = card.querySelector('.replay-overlay');
             
             // Video event listeners
             videoElement.addEventListener('loadedmetadata', () => {
-                updateTimeDisplay(videoElement, timeDisplay);
-            });
-            
-            videoElement.addEventListener('timeupdate', () => {
-                updateProgress(videoElement, progressBar);
-                updateTimeDisplay(videoElement, timeDisplay);
-            });
-            
-            videoElement.addEventListener('play', () => {
-                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
-                state.isPlaying = true;
-            });
-            
-            videoElement.addEventListener('pause', () => {
-                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-                state.isPlaying = false;
+                console.log(`Video ${video.id} loaded, duration: ${videoElement.duration}s`);
             });
             
             videoElement.addEventListener('ended', () => {
                 replayOverlay.classList.add('show');
-                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
                 
                 // Auto-play next video after 3 seconds
                 setTimeout(() => {
@@ -1929,13 +1699,24 @@
                 }, 3000);
             });
             
-            // Control event listeners
-            playPauseBtn.addEventListener('click', () => togglePlayPause(videoElement, playPauseBtn));
-            progressContainer.addEventListener('click', (e) => seekVideo(e, videoElement, progressContainer));
-            volumeRange.addEventListener('input', (e) => {
-                videoElement.volume = e.target.value / 100;
-                volumeBtn.innerHTML = e.target.value > 0 ? '<i class="fas fa-volume-up"></i>' : '<i class="fas fa-volume-mute"></i>';
-            });
+            // Auto-play when video is in view
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        if (videoElement.paused) {
+                            videoElement.play().catch(e => console.log('Autoplay prevented:', e));
+                        }
+                    } else {
+                        if (!videoElement.paused) {
+                            videoElement.pause();
+                        }
+                    }
+                });
+            }, { threshold: 0.5 });
+            
+            observer.observe(card);
+            
+            // Replay overlay click
             replayOverlay.addEventListener('click', () => {
                 replayOverlay.classList.remove('show');
                 videoElement.currentTime = 0;
@@ -1960,7 +1741,6 @@
             if (!videoCard) return;
             
             const videoElement = videoCard.querySelector('video');
-            const playPauseBtn = videoCard.querySelector('.play-pause-btn');
             const replayOverlay = videoCard.querySelector('.replay-overlay');
             
             state.currentVideoIndex = index;
@@ -1971,42 +1751,10 @@
             
             // Play video
             videoElement.play().then(() => {
-                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
                 state.isPlaying = true;
             }).catch(error => {
                 console.log('Autoplay prevented:', error);
             });
-        }
-
-        function togglePlayPause(videoElement, button) {
-            if (videoElement.paused) {
-                videoElement.play();
-                button.innerHTML = '<i class="fas fa-pause"></i>';
-            } else {
-                videoElement.pause();
-                button.innerHTML = '<i class="fas fa-play"></i>';
-            }
-        }
-
-        function seekVideo(event, videoElement, container) {
-            const rect = container.getBoundingClientRect();
-            const percent = (event.clientX - rect.left) / rect.width;
-            videoElement.currentTime = percent * videoElement.duration;
-        }
-
-        function updateProgress(videoElement, progressBar) {
-            if (videoElement.duration) {
-                const progress = (videoElement.currentTime / videoElement.duration) * 100;
-                progressBar.style.width = `${progress}%`;
-            }
-        }
-
-        function updateTimeDisplay(videoElement, timeDisplay) {
-            if (videoElement.duration) {
-                const current = formatTime(videoElement.currentTime);
-                const duration = formatTime(videoElement.duration);
-                timeDisplay.textContent = `${current} / ${duration}`;
-            }
         }
 
         function scrollToVideo(index) {
@@ -2050,26 +1798,6 @@
             
             countSpan.textContent = formatNumber(video.likes);
             await saveInteraction(videoId, 'like');
-        }
-
-        async function handleFollow(creatorTag, button) {
-            const isFollowing = state.userData.following.has(creatorTag);
-            
-            if (isFollowing) {
-                state.userData.following.delete(creatorTag);
-                button.textContent = 'Follow';
-                button.classList.remove('following');
-            } else {
-                state.userData.following.add(creatorTag);
-                button.textContent = 'Following';
-                button.classList.add('following');
-                
-                // Animation
-                button.style.transform = 'scale(1.1)';
-                setTimeout(() => button.style.transform = '', 300);
-            }
-            
-            await saveInteraction(creatorTag, 'follow');
         }
 
         // ============================================
@@ -2116,23 +1844,18 @@
                     handleLike(videoId, button);
                 }
                 
-                // Follow button
-                if (e.target.closest('.follow-button')) {
-                    const button = e.target.closest('.follow-button');
-                    const creatorTag = button.dataset.creator;
-                    handleFollow(creatorTag, button);
-                }
-                
                 // Video tap to play/pause
                 if (e.target.closest('.video-wrapper') && 
-                    !e.target.closest('.right-actions') && 
-                    !e.target.closest('.player-controls') &&
+                    !e.target.closest('.right-actions') &&
                     !e.target.closest('.replay-overlay')) {
                     const videoCard = e.target.closest('.video-card');
                     const videoElement = videoCard?.querySelector('video');
-                    const playPauseBtn = videoCard?.querySelector('.play-pause-btn');
-                    if (videoElement && playPauseBtn) {
-                        togglePlayPause(videoElement, playPauseBtn);
+                    if (videoElement) {
+                        if (videoElement.paused) {
+                            videoElement.play();
+                        } else {
+                            videoElement.pause();
+                        }
                     }
                 }
                 
@@ -2158,8 +1881,7 @@
                 }
             });
             
-            // Upload buttons
-            elements.uploadButton?.addEventListener('click', handleUpload);
+            // Upload first button
             elements.uploadFirstButton?.addEventListener('click', handleUpload);
             
             // Bottom navigation
@@ -2211,10 +1933,10 @@
                 case 'Space':
                     e.preventDefault();
                     if (state.currentVideoElement) {
-                        const videoCard = state.currentVideoElement.closest('.video-card');
-                        const playPauseBtn = videoCard?.querySelector('.play-pause-btn');
-                        if (playPauseBtn) {
-                            togglePlayPause(state.currentVideoElement, playPauseBtn);
+                        if (state.currentVideoElement.paused) {
+                            state.currentVideoElement.play();
+                        } else {
+                            state.currentVideoElement.pause();
                         }
                     }
                     break;
@@ -2237,12 +1959,6 @@
                     e.preventDefault();
                     if (state.currentVideoElement) {
                         state.currentVideoElement.muted = !state.currentVideoElement.muted;
-                        const videoCard = state.currentVideoElement.closest('.video-card');
-                        const volumeBtn = videoCard?.querySelector('.volume-btn i');
-                        if (volumeBtn) {
-                            volumeBtn.className = state.currentVideoElement.muted ? 
-                                'fas fa-volume-mute' : 'fas fa-volume-up';
-                        }
                     }
                     break;
                     
@@ -2257,12 +1973,11 @@
 
         function handleNavigation(page) {
             console.log('Navigating to:', page);
-            // Implement page navigation here
+            showNotification('Navigation', `Navigating to ${page} page`);
         }
 
         async function handleUpload() {
             showNotification('Coming Soon', 'Upload feature will be available soon!');
-            // Implement video upload here
         }
 
         // ============================================
@@ -2348,13 +2063,6 @@
         }
 
         function formatDuration(seconds) {
-            if (!seconds || isNaN(seconds)) return '0:00';
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins}:${secs.toString().padStart(2, '0')}`;
-        }
-
-        function formatTime(seconds) {
             if (!seconds || isNaN(seconds)) return '0:00';
             const mins = Math.floor(seconds / 60);
             const secs = Math.floor(seconds % 60);
